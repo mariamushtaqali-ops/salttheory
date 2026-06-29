@@ -1,0 +1,107 @@
+@import url('https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=Manrope:wght@300;400;500;600;700;800&display=swap');
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  --cream:  #F7F1E8;
+  --light:  #FDF9F3;
+  --border: #E8DDD0;
+  --muted:  #8A7060;
+  --orange: #E96B3C;
+  --green:  #7A8B5C;
+  --yellow: #F3C766;
+  --ink:    #24211E;
+}
+
+* { box-sizing: border-box; }
+
+html { scroll-behavior: smooth; }
+
+body {
+  font-family: 'Manrope', system-ui, sans-serif;
+  background: var(--cream);
+  color: var(--ink);
+  -webkit-font-smoothing: antialiased;
+}
+
+.font-serif { font-family: 'Instrument Serif', Georgia, serif; }
+
+/* Chip selector */
+.chip {
+  @apply inline-flex items-center px-3 py-1.5 rounded-full text-xs font-semibold
+         bg-light border border-border text-ink cursor-pointer
+         transition-all duration-150 select-none;
+}
+.chip:hover  { @apply border-orange text-orange; }
+.chip.active { @apply bg-orange border-orange text-white; }
+.chip.active-g { @apply bg-green border-green text-white; }
+
+/* Card */
+.card {
+  @apply bg-white border border-border rounded-[14px];
+}
+
+/* Buttons */
+.btn-primary {
+  @apply inline-flex items-center justify-center gap-2
+         bg-orange text-white font-bold rounded-full
+         px-6 py-3 text-sm transition-all duration-200
+         hover:bg-[#C85A2C] hover:-translate-y-px
+         hover:shadow-[0_6px_20px_rgba(233,107,60,0.28)];
+}
+.btn-secondary {
+  @apply inline-flex items-center justify-center gap-2
+         bg-transparent text-ink font-bold rounded-full
+         px-6 py-3 text-sm border-2 border-border
+         transition-all duration-200
+         hover:border-ink hover:bg-ink hover:text-cream;
+}
+.btn-green {
+  @apply inline-flex items-center justify-center gap-2
+         bg-green text-white font-bold rounded-full
+         px-6 py-3 text-sm transition-all duration-200
+         hover:bg-[#607249] hover:shadow-[0_6px_20px_rgba(122,139,92,0.28)];
+}
+.btn-ghost {
+  @apply inline-flex items-center justify-center gap-2
+         bg-transparent text-ink font-semibold rounded-full
+         px-4 py-2 text-xs border border-border
+         transition-all duration-200
+         hover:border-orange hover:text-orange;
+}
+
+/* Form inputs */
+.input {
+  @apply w-full px-3.5 py-2.5 rounded-[10px] text-sm
+         border border-border bg-light text-ink
+         outline-none transition-all duration-200
+         placeholder:text-[#C4B8AE]
+         focus:border-orange focus:bg-white
+         focus:shadow-[0_0_0_3px_rgba(233,107,60,0.1)];
+}
+
+/* Eyebrow label */
+.eyebrow {
+  @apply inline-flex items-center gap-2 text-[10px] font-bold
+         tracking-[0.14em] uppercase text-orange;
+}
+.eyebrow::before {
+  content: '';
+  @apply w-5 h-0.5 bg-orange rounded-sm flex-shrink-0;
+}
+.eyebrow.green { @apply text-green; }
+.eyebrow.green::before { @apply bg-green; }
+
+/* Divider accent */
+.divider {
+  @apply w-12 h-0.5 bg-orange rounded-sm my-3;
+}
+
+/* Usage bar */
+.usage-bar {
+  @apply h-1 rounded-full bg-border overflow-hidden;
+}
+.usage-bar-fill {
+  @apply h-full rounded-full transition-all duration-500;
+}

@@ -1,0 +1,55 @@
+import { NextRequest, NextResponse } from 'next/server'
+import { createClient } from '@/lib/supabase/server'
+
+export async function POST(req: NextRequest) {
+  try {
+    const { email, source = 'homepage' } = await req.json()
+    if (!email) return NextResponse.json({ error: 'Email required' }, { status: 400 })
+
+    const supabase = createClient()
+
+    // Save to Supabase — insert, ignore if already exists
+    const { error: dbError } = await supabase
+      .from('subscribers')
+      .insert({ email, source })
+      .throwOnError()
+
+    if (dbError && !dbError.message.includes('duplicate')) {
+      console.error('Supabase insert error:', dbError)
+    }
+
+    // Push to Beehiiv
+    if (process.env.BEEHIIV_API_KEY && process.env.BEEHIIV_PUBLICATION_ID) {
+      const beehiivRes = await fetch(
+        `https://api.beehiiv.com/v2/publications/${process.env.BEEHIIV_PUBLICATION_ID}/subscriptions`,
+        {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            Authorization: `Bearer ${process.env.BEEHIIV_API_KEY}`,
+          },
+          body: JSON.stringify({
+            email,
+            reactivate_existing: false,
+            send_welcome_email: true,
+            utm_source: source,
+            utm_medium: 'organic',
+            utm_campaign: 'salt-theory-signup',
+          }),
+        }
+      )
+      if (!beehiivRes.ok) {
+        console.error('Beehiiv error:', await beehiivRes.text())
+      }
+    }
+
+    return NextResponse.json({ success: true })
+  } catch (e: any) {
+    // Duplicate email is fine — already subscribed
+    if (e?.message?.includes('duplicate') || e?.code === '23505') {
+      return NextResponse.json({ success: true })
+    }
+    console.error('Subscribe error:', e)
+    return NextResponse.json({ error: 'Failed to subscribe' }, { status: 500 })
+  }
+}
