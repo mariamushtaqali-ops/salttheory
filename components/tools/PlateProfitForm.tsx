@@ -6,7 +6,7 @@ import { useRouter } from 'next/navigation'
 const SPOON_G: Record<string,number> = { tsp: 4, tbsp: 12, cup: 200 }
 
 function convert(qty: number, useUnit: string, buyUnit: string, price: number, wastage: number): number {
-  const usable = qty * (1 - wastage / 100)
+  const usable = wastage > 0 ? qty / (1 - wastage / 100) : qty
   if (useUnit === 'g') {
     if (buyUnit === 'per kg')    return (usable / 1000) * price
     if (buyUnit === 'per 500g')  return (usable / 500)  * price
