@@ -157,16 +157,7 @@ export default function RecipeForm({ canGenerate, usageCount }: {
           value={onHand} onChange={e => setOnHand(e.target.value)} />
       </div>
 
-      <button type="button" onClick={() => setIncludeCost(!includeCost)}
-        className="card w-full flex items-center justify-between p-4 mb-3 hover:border-orange transition-colors">
-        <div className="text-left">
-          <p className="text-[13px] font-bold text-ink">Include cost estimate</p>
-          <p className="text-[12px] text-muted">AI estimates ingredient costs after generating</p>
-        </div>
-        <div className={`w-[42px] h-[23px] rounded-full relative transition-colors flex-shrink-0 ${includeCost ? 'bg-orange' : 'bg-border'}`}>
-          <div className={`absolute top-[3px] w-[17px] h-[17px] rounded-full bg-white shadow-sm transition-transform ${includeCost ? 'translate-x-[22px] left-[0]' : 'left-[3px]'}`} />
-        </div>
-      </button>
+
 
       <button onClick={handleGenerate} disabled={loading || !canGenerate}
         className="btn-primary w-full py-3.5 text-[14px] disabled:opacity-50 disabled:cursor-not-allowed">
