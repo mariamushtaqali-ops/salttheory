@@ -8,13 +8,12 @@ export async function POST(req: NextRequest) {
 
     const supabase = createClient()
 
-    // Save to Supabase — insert, ignore if already exists
+    // Save to Supabase — ignore duplicate errors
     const { error: dbError } = await supabase
       .from('subscribers')
       .insert({ email, source })
-      .throwOnError()
 
-    if (dbError && !dbError.message.includes('duplicate')) {
+    if (dbError && !dbError.message.includes('duplicate') && !dbError.code?.includes('23505')) {
       console.error('Supabase insert error:', dbError)
     }
 
@@ -34,7 +33,6 @@ export async function POST(req: NextRequest) {
             send_welcome_email: true,
             utm_source: source,
             utm_medium: 'organic',
-            utm_campaign: 'salt-theory-signup',
           }),
         }
       )
@@ -45,8 +43,7 @@ export async function POST(req: NextRequest) {
 
     return NextResponse.json({ success: true })
   } catch (e: any) {
-    // Duplicate email is fine — already subscribed
-    if (e?.message?.includes('duplicate') || e?.code === '23505') {
+    if (e?.code === '23505') {
       return NextResponse.json({ success: true })
     }
     console.error('Subscribe error:', e)
