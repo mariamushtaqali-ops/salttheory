@@ -93,7 +93,7 @@ const DEFAULT_PLATFORMS: Platform[] = [
 
 let nextId = 10
 
-function Lbl({ children }: { children: React.ReactNode }) {
+function Lbl({ children }: { children?: React.ReactNode }) {
   return <p className="text-[10px] font-bold uppercase tracking-wide text-muted mb-1">{children}</p>
 }
 
