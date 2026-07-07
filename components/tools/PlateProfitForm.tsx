@@ -478,6 +478,36 @@ export default function PlateProfitForm({ canCost, usageCount }: {
             Full breakdown · {results.srv} serving{results.srv > 1 ? 's' : ''}
           </p>
 
+          {/* Donut chart */}
+          {(() => {
+            const primaryMargin = results.platResults[0]?.margin ?? 0
+            const costPct = 100 - primaryMargin
+            const sz = 130, sw = 22, r = (sz - sw) / 2
+            const circ = 2 * Math.PI * r
+            const costArc = (costPct / 100) * circ
+            const marginArc = (primaryMargin / 100) * circ
+            return (
+              <div className="flex flex-col items-center mb-5">
+                <div className="relative">
+                  <svg width={sz} height={sz} style={{transform:"rotate(-90deg)"}}>
+                    <circle cx={sz/2} cy={sz/2} r={r} fill="none" stroke="#E8DDD0" strokeWidth={sw}/>
+                    <circle cx={sz/2} cy={sz/2} r={r} fill="none" stroke="#E96B3C" strokeWidth={sw}
+                      strokeDasharray={`${costArc} ${circ}`} strokeLinecap="round"/>
+                    <circle cx={sz/2} cy={sz/2} r={r} fill="none" stroke="#7A8B5C" strokeWidth={sw}
+                      strokeDasharray={`${marginArc} ${circ}`} strokeDashoffset={-costArc} strokeLinecap="round"/>
+                  </svg>
+                  <div className="absolute inset-0 flex flex-col items-center justify-center">
+                    <span className="font-serif text-[22px] text-green leading-none">{primaryMargin}%</span>
+                    <span className="text-[10px] text-muted">margin</span>
+                  </div>
+                </div>
+                <div className="flex gap-5 text-[11px] text-muted mt-2">
+                  <span><span className="inline-block w-2 h-2 rounded-full bg-orange mr-1.5"/>Cost {costPct}%</span>
+                  <span><span className="inline-block w-2 h-2 rounded-full bg-green mr-1.5"/>Margin {primaryMargin}%</span>
+                </div>
+              </div>
+            )
+          })()}
           <p className="text-[10px] font-bold uppercase tracking-wide text-muted mb-2">Cost breakdown</p>
           <div className="mb-5">
             {results.ingBreakdown.map((r: any) => (
