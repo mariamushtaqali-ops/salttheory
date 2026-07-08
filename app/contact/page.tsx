@@ -192,7 +192,7 @@ export default function ContactPage() {
             <span className="font-serif text-[16px] text-white">Salt Theory</span>
           </div>
           <div className="flex gap-5 text-[12px] text-white/40">
-            <Link href="/blog" className="hover:text-white transition-colors">Blog</Link>
+            <Link href="/blog" className="hover:text-white transition-colors">Journal</Link>
             <Link href="/contact" className="hover:text-white transition-colors">Contact</Link>
             <a href={INSTAGRAM_URL} target="_blank" rel="noopener noreferrer"
               className="hover:text-white transition-colors">Instagram</a>

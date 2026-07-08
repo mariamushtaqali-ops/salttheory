@@ -27,12 +27,15 @@ export default async function HomePage() {
               Start Free ✦
             </Link>
             <Link href="#create-price-run" className="btn-secondary px-8 py-3.5 text-[15px]">
-              Explore Tools
+              Explore the Platform
             </Link>
           </div>
-          <p className="text-[12px] text-muted mt-4">
-            5 free recipes · 3 free costings · No card needed
-          </p>
+          <div className="flex flex-wrap gap-x-4 gap-y-1 mt-4">
+            <span className="text-[12px] text-muted">✔ 5 free recipes</span>
+            <span className="text-[12px] text-muted">✔ 3 free food costings</span>
+            <span className="text-[12px] text-muted">✔ No credit card required</span>
+            <span className="text-[12px] text-muted">✔ Takes less than 2 minutes</span>
+          </div>
         </div>
 
         {/* Stick figure illustration */}
@@ -155,22 +158,25 @@ export default async function HomePage() {
 
           <div className="grid md:grid-cols-3 gap-5">
             {/* Create */}
-            <div className="card p-6 border-t-4 border-t-orange">
+            <Link href="/recipe-gennie"
+              className="card p-6 border-t-4 border-t-orange block transition-all duration-200 hover:-translate-y-0.5 hover:shadow-md">
               <div className="eyebrow mb-3">Create</div>
               <h3 className="font-serif text-[22px] text-ink mb-2">Recipe Studio</h3>
               <p className="text-[14px] text-muted leading-relaxed mb-4">
                 Create consistent recipes for any cuisine. Scale recipes for any number of guests.
               </p>
               <p className="text-[12px] font-semibold text-green mb-4">Free — 5 recipes/month</p>
-              <Link href="/recipe-gennie" className="btn-secondary block text-center py-2.5 text-[13px]">
-                Generate Recipes
-              </Link>
-            </div>
+              <span className="btn-secondary block text-center py-2.5 text-[13px]">
+                Create Recipe
+              </span>
+            </Link>
 
             {/* Price — flagship, slightly elevated */}
-            <div className="card p-6 border-t-4 border-t-green relative md:scale-[1.03] md:shadow-lg z-10">
+            <Link href="/plate-profit"
+              className="card p-6 border-t-4 border-t-green relative block border-2 border-green/20
+                         transition-all duration-200 hover:-translate-y-0.5 md:shadow-md hover:shadow-lg z-10">
               <div className="absolute top-3 right-3 text-[10px] font-bold bg-green/15 text-green px-2 py-0.5 rounded-full">
-                Flagship tool
+                Start Here
               </div>
               <div className="eyebrow green mb-3">Price</div>
               <h3 className="font-serif text-[22px] text-ink mb-2">Plate Profit</h3>
@@ -185,13 +191,15 @@ export default async function HomePage() {
                 <li className="flex gap-2"><span className="text-green">✦</span>Profit margin</li>
               </ul>
               <p className="text-[12px] font-semibold text-green mb-4">Free — 3 dish costings</p>
-              <Link href="/plate-profit" className="btn-primary block text-center py-2.5 text-[13px]">
-                Cost a Dish
-              </Link>
-            </div>
+              <span className="btn-primary block text-center py-2.5 text-[13px]">
+                Cost My Dish
+              </span>
+            </Link>
 
             {/* Run */}
-            <div className="card p-6 border-t-4 border-t-yellow relative overflow-hidden">
+            <Link href="#newsletter"
+              className="card p-6 border-t-4 border-t-yellow relative overflow-hidden block
+                         transition-all duration-200 hover:-translate-y-0.5 hover:shadow-md">
               <div className="absolute top-3 right-3 text-[10px] font-bold bg-yellow/20 text-brown px-2 py-0.5 rounded-full">
                 Coming soon
               </div>
@@ -208,10 +216,10 @@ export default async function HomePage() {
                 <li className="flex gap-2"><span style={{color:'#9B6A45'}}>✦</span>Training Manuals</li>
                 <li className="flex gap-2"><span style={{color:'#9B6A45'}}>✦</span>Business Blueprint</li>
               </ul>
-              <Link href="#newsletter" className="btn-secondary block text-center py-2.5 text-[13px]">
+              <span className="btn-secondary block text-center py-2.5 text-[13px]">
                 Join Waitlist
-              </Link>
-            </div>
+              </span>
+            </Link>
           </div>
         </div>
       </section>
@@ -224,13 +232,56 @@ export default async function HomePage() {
         </div>
         <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
           {[
-            { icon: '🏠', title: 'Home chef',        desc: 'Turning your passion into consistent, profitable orders from home' },
-            { icon: '🍱', title: 'Caterer',           desc: 'Managing events and bulk orders without losing your margin' },
-            { icon: '☁️', title: 'Cloud kitchen',     desc: 'Scaling your operation without the chaos that comes with growth' },
-            { icon: '🏪', title: 'Restaurant & café', desc: 'Running a professional operation with real systems and processes' },
+            {
+              title: 'Home Chef',
+              desc: 'Turn passion into a profitable food business.',
+              icon: (
+                <svg viewBox="0 0 48 48" className="w-10 h-10 mx-auto" fill="none">
+                  <ellipse cx="24" cy="30" rx="16" ry="9" stroke="#E96B3C" strokeWidth="2"/>
+                  <line x1="8" y1="30" x2="40" y2="30" stroke="#E96B3C" strokeWidth="2"/>
+                  <path d="M18 20 Q20 12 18 6" stroke="#E96B3C" strokeWidth="1.5" strokeLinecap="round"/>
+                  <path d="M24 20 Q26 10 24 4" stroke="#E96B3C" strokeWidth="1.5" strokeLinecap="round"/>
+                  <path d="M30 20 Q32 12 30 6" stroke="#E96B3C" strokeWidth="1.5" strokeLinecap="round"/>
+                </svg>
+              ),
+            },
+            {
+              title: 'Caterer',
+              desc: 'Scale events without losing your margins.',
+              icon: (
+                <svg viewBox="0 0 48 48" className="w-10 h-10 mx-auto" fill="none">
+                  <rect x="6" y="28" width="36" height="6" rx="3" stroke="#7A8B5C" strokeWidth="2"/>
+                  <circle cx="14" cy="22" r="6" stroke="#7A8B5C" strokeWidth="1.5"/>
+                  <circle cx="24" cy="20" r="7" stroke="#7A8B5C" strokeWidth="1.5"/>
+                  <circle cx="34" cy="22" r="6" stroke="#7A8B5C" strokeWidth="1.5"/>
+                </svg>
+              ),
+            },
+            {
+              title: 'Cloud Kitchen',
+              desc: 'Run leaner with documented recipes and systems.',
+              icon: (
+                <svg viewBox="0 0 48 48" className="w-10 h-10 mx-auto" fill="none">
+                  <path d="M14 26a8 8 0 0 1 0-16 10 10 0 0 1 19-3 7 7 0 0 1 1 14H14z" stroke="#24211E" strokeWidth="2" strokeLinejoin="round"/>
+                  <path d="M22 30q2 4 0 7q3-1 3-4q2 2 1 5" stroke="#E96B3C" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
+                </svg>
+              ),
+            },
+            {
+              title: 'Restaurant & Café',
+              desc: 'Standardize costing, operations and staff training.',
+              icon: (
+                <svg viewBox="0 0 48 48" className="w-10 h-10 mx-auto" fill="none">
+                  <rect x="14" y="10" width="20" height="28" rx="2" stroke="#F3C766" strokeWidth="2"/>
+                  <line x1="18" y1="18" x2="30" y2="18" stroke="#F3C766" strokeWidth="1.2"/>
+                  <line x1="18" y1="24" x2="30" y2="24" stroke="#F3C766" strokeWidth="1.2"/>
+                  <line x1="18" y1="30" x2="26" y2="30" stroke="#F3C766" strokeWidth="1.2"/>
+                </svg>
+              ),
+            },
           ].map(item => (
-            <div key={item.title} className="card p-5 text-center hover:-translate-y-1 transition-transform">
-              <div className="text-[32px] mb-3">{item.icon}</div>
+            <div key={item.title} className="card p-6 text-center hover:-translate-y-1 hover:shadow-md transition-all duration-200">
+              <div className="mb-4">{item.icon}</div>
               <h3 className="font-serif text-[17px] text-ink mb-2">{item.title}</h3>
               <p className="text-[12px] text-muted leading-relaxed">{item.desc}</p>
             </div>
@@ -254,13 +305,13 @@ export default async function HomePage() {
           </div>
           <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
             {[
-              { value: '[XX]+', label: 'Recipes Developed' },
-              { value: '[XX]+', label: 'Menu Items Costed' },
-              { value: '[XX]+', label: 'Years of Restaurant Experience' },
-              { value: '[XX]+', label: 'Restaurants Supported' },
+              { value: '100+', label: 'Recipes Developed' },
+              { value: '50+', label: 'Menu Items Costed' },
+              { value: '15+', label: 'Years Business Experience' },
+              { value: 'Real Kitchens', label: 'Systems Tested In' },
             ].map(stat => (
               <div key={stat.label} className="card p-5 text-center">
-                <p className="font-serif text-[30px] text-orange leading-none mb-2">{stat.value}</p>
+                <p className="font-serif text-[clamp(18px,3vw,30px)] text-orange leading-tight mb-2">{stat.value}</p>
                 <p className="text-[12px] text-muted leading-relaxed">{stat.label}</p>
               </div>
             ))}
@@ -281,10 +332,11 @@ export default async function HomePage() {
           <div className="card p-6">
             <p className="text-[11px] font-bold uppercase tracking-wide text-muted mb-3">Free</p>
             <p className="font-serif text-[42px] text-ink leading-none mb-1">PKR 0</p>
-            <p className="text-[12px] text-muted mb-5">No card required</p>
+            <p className="text-[12px] text-muted mb-5">Perfect for getting started</p>
             <ul className="space-y-2 text-[13px] text-muted mb-6">
-              <li className="flex gap-2"><span className="text-green">✦</span>Recipe Gennie — 5/month</li>
-              <li className="flex gap-2"><span className="text-green">✦</span>Plate Profit — 3 costings</li>
+              <li className="flex gap-2"><span className="text-green">✦</span>5 recipes every month</li>
+              <li className="flex gap-2"><span className="text-green">✦</span>3 food costings</li>
+              <li className="flex gap-2"><span className="text-green">✦</span>No credit card required</li>
             </ul>
             <Link href="/auth/signup" className="btn-secondary block text-center py-2.5 text-[13px]">
               Get started
@@ -293,16 +345,19 @@ export default async function HomePage() {
           <div className="card p-6 border-orange relative">
             <div className="absolute -top-3 left-1/2 -translate-x-1/2 bg-orange text-white
                             text-[10px] font-bold px-3 py-1 rounded-full whitespace-nowrap">
-              ✦ Both tools unlimited
+              ✦ Both modules unlimited
             </div>
             <p className="text-[11px] font-bold uppercase tracking-wide text-muted mb-3">Pro</p>
             <p className="font-serif text-[42px] text-ink leading-none mb-1">PKR 999</p>
-            <p className="text-[12px] text-muted mb-5">per month</p>
+            <p className="text-[12px] text-muted mb-5">Built for serious food businesses</p>
             <ul className="space-y-2 text-[13px] text-muted mb-6">
-              <li className="flex gap-2"><span className="text-green">✦</span>Unlimited recipes</li>
-              <li className="flex gap-2"><span className="text-green">✦</span>Unlimited costings</li>
-              <li className="flex gap-2"><span className="text-green">✦</span>PDF export</li>
-              <li className="flex gap-2"><span className="text-green">✦</span>EasyPaisa / JazzCash</li>
+              <li className="flex gap-2"><span className="text-green">✦</span>Unlimited Recipe Studio</li>
+              <li className="flex gap-2"><span className="text-green">✦</span>Unlimited Plate Profit</li>
+              <li className="flex gap-2"><span className="text-green">✦</span>PDF Export</li>
+              <li className="flex gap-2"><span className="text-green">✦</span>Future Platform Modules</li>
+              <li className="flex gap-2"><span className="text-green">✦</span>Priority Updates</li>
+              <li className="flex gap-2"><span className="text-green">✦</span>EasyPaisa</li>
+              <li className="flex gap-2"><span className="text-green">✦</span>JazzCash</li>
             </ul>
             <Link href="/auth/signup" className="btn-primary block text-center py-2.5 text-[13px]">
               Upgrade to Pro
@@ -315,12 +370,16 @@ export default async function HomePage() {
       <section className="bg-ink py-16">
         <div className="max-w-[600px] mx-auto px-6 text-center">
           <div className="w-16 h-px bg-orange mx-auto mb-8"></div>
+          <div className="eyebrow white justify-center mb-5">Why Salt Theory exists</div>
           <p className="font-serif text-[clamp(18px,2.5vw,24px)] text-white leading-[1.7] mb-6">
-            "I built Salt Theory because I kept seeing incredible food businesses struggle — not because the food wasn't good,
-            but because there was no system behind it. No documented recipes. No costing. No processes. No training.
-            The knowledge lived in people's heads and walked out the door with them."
+            Every recipe eventually becomes a business problem.<br /><br />
+            If your pricing is wrong, your profit disappears.<br />
+            If your recipes aren't documented, your consistency disappears.<br />
+            If your systems only exist inside people's heads, your business cannot grow.
           </p>
-          <p className="text-[13px] text-white/40 mb-8">— Salt Theory</p>
+          <p className="text-[14px] text-white/60 leading-relaxed mb-8 max-w-[480px] mx-auto">
+            Salt Theory helps food businesses replace guesswork with documented recipes, accurate costing and repeatable systems. Built by someone who has experienced these challenges first-hand.
+          </p>
           <Link href="/auth/signup" className="btn-primary px-8 py-3.5 text-[14px] inline-flex">
             Build your system today ✦
           </Link>
@@ -358,21 +417,21 @@ export default async function HomePage() {
                 <span className="font-serif text-[17px] text-white">Salt Theory</span>
               </div>
               <p className="text-[12px] text-white/40 leading-relaxed">
-                The complete business system for food businesses. Create · Price · Run.
+                Helping food businesses create better recipes, price with confidence and build systems that scale.
               </p>
             </div>
             <div className="flex gap-12 text-[13px]">
               <div>
-                <p className="text-white/20 text-[10px] uppercase tracking-wider mb-3">Tools</p>
+                <p className="text-white/20 text-[10px] uppercase tracking-wider mb-3">System</p>
                 <div className="space-y-2">
-                  <Link href="/auth/signup" className="block text-white/50 hover:text-white transition-colors">Recipe Gennie</Link>
+                  <Link href="/auth/signup" className="block text-white/50 hover:text-white transition-colors">Recipe Studio</Link>
                   <Link href="/auth/signup" className="block text-white/50 hover:text-white transition-colors">Plate Profit</Link>
                 </div>
               </div>
               <div>
                 <p className="text-white/20 text-[10px] uppercase tracking-wider mb-3">Company</p>
                 <div className="space-y-2">
-                  <Link href="/blog" className="block text-white/50 hover:text-white transition-colors">Blog</Link>
+                  <Link href="/blog" className="block text-white/50 hover:text-white transition-colors">Journal</Link>
                   <Link href="/contact" className="block text-white/50 hover:text-white transition-colors">Contact</Link>
                   <a href="https://instagram.com/salttheorylab" target="_blank" rel="noopener noreferrer"
                     className="block text-white/50 hover:text-white transition-colors">Instagram</a>

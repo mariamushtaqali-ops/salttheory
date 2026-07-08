@@ -77,7 +77,7 @@ export default function TopNav() {
               onClick={() => setToolsOpen(o => !o)}
               className={`flex items-center gap-1.5 px-3 py-2 rounded-[8px] text-[13px] font-medium
                           transition-colors ${toolsOpen ? 'text-orange bg-cream' : 'text-muted hover:text-ink hover:bg-cream'}`}>
-              Tools
+              System
               <svg width="12" height="12" viewBox="0 0 12 12" fill="none"
                 className={`transition-transform ${toolsOpen ? 'rotate-180' : ''}`}>
                 <path d="M2 4l4 4 4-4" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
@@ -85,17 +85,20 @@ export default function TopNav() {
             </button>
 
             {toolsOpen && (
-              <div className="absolute top-full left-0 mt-1.5 w-[240px]
+              <div className="absolute top-full left-0 mt-1.5 w-[280px]
                               bg-white border border-border rounded-[14px]
                               shadow-[0_8px_32px_rgba(36,33,30,0.12)] overflow-hidden">
+                <div className="px-4 pt-3 pb-1">
+                  <p className="text-[10px] font-bold uppercase tracking-wide text-muted/60">Available</p>
+                </div>
                 <Link href={toolHref('recipe-gennie')}
                   className="flex items-start gap-3 px-4 py-3.5 hover:bg-cream transition-colors group">
                   <div className="w-8 h-8 rounded-[8px] bg-orange/10 flex items-center justify-center flex-shrink-0 mt-0.5">
                     <span className="text-orange text-[14px]">✦</span>
                   </div>
                   <div>
-                    <p className="text-[13px] font-bold text-ink group-hover:text-orange transition-colors">Recipe Gennie</p>
-                    <p className="text-[11px] text-muted">Generate any recipe, any cuisine</p>
+                    <p className="text-[13px] font-bold text-ink group-hover:text-orange transition-colors">Recipe Studio</p>
+                    <p className="text-[11px] text-muted">Create reliable recipes for any cuisine</p>
                   </div>
                 </Link>
                 <div className="h-px bg-border mx-4" />
@@ -106,16 +109,35 @@ export default function TopNav() {
                   </div>
                   <div>
                     <p className="text-[13px] font-bold text-ink group-hover:text-green transition-colors">Plate Profit</p>
-                    <p className="text-[11px] text-muted">Calculate your exact margin</p>
+                    <p className="text-[11px] text-muted">Cost dishes and know your margin</p>
                   </div>
                 </Link>
+                <div className="h-px bg-border mx-4" />
+                <div className="px-4 pt-3 pb-1">
+                  <p className="text-[10px] font-bold uppercase tracking-wide text-muted/60">Coming soon</p>
+                </div>
+                {[
+                  { name: 'Weekly Dashboard', desc: 'Track sales, cost and profit' },
+                  { name: 'Profit Leak Audit', desc: 'Find where profit is disappearing' },
+                  { name: 'SOP Builder', desc: 'Document repeatable operations' },
+                  { name: 'Training Manuals', desc: 'Train staff with clear systems' },
+                  { name: 'Business Blueprint', desc: 'Build your full operating system' },
+                ].map(mod => (
+                  <div key={mod.name} className="flex items-start justify-between gap-2 px-4 py-2 cursor-default">
+                    <div>
+                      <p className="text-[12px] font-semibold text-muted/70">{mod.name}</p>
+                      <p className="text-[10px] text-muted/50">{mod.desc}</p>
+                    </div>
+                    <span className="text-[9px] font-bold uppercase tracking-wide text-muted/40 bg-cream px-1.5 py-0.5 rounded-full flex-shrink-0 mt-0.5">Soon</span>
+                  </div>
+                ))}
                 {!user && (
                   <>
                     <div className="h-px bg-border" />
                     <div className="px-4 py-3 bg-cream">
                       <p className="text-[11px] text-muted">
                         <Link href="/auth/signup" className="text-orange font-bold hover:underline">Sign up free</Link>
-                        {' '}to access both tools
+                        {' '}to access both modules
                       </p>
                     </div>
                   </>
@@ -127,7 +149,7 @@ export default function TopNav() {
           <Link href="/blog"
             className={`px-3 py-2 rounded-[8px] text-[13px] font-medium transition-colors
               ${pathname.startsWith('/blog') ? 'text-ink bg-cream' : 'text-muted hover:text-ink hover:bg-cream'}`}>
-            Blog
+            Journal
           </Link>
 
           <Link href="/contact"
@@ -212,13 +234,13 @@ export default function TopNav() {
           <div className="absolute top-[64px] left-0 right-0 bg-white border-b border-border shadow-xl">
             <div className="px-5 py-4 space-y-1">
 
-              <p className="text-[10px] font-bold uppercase tracking-wide text-muted px-3 pb-1">Tools</p>
+              <p className="text-[10px] font-bold uppercase tracking-wide text-muted px-3 pb-1">System</p>
               <Link href={toolHref('recipe-gennie')}
                 className="flex items-center gap-3 px-3 py-3 rounded-[10px] hover:bg-cream transition-colors">
                 <span className="text-orange">✦</span>
                 <div>
-                  <p className="text-[13px] font-bold text-ink">Recipe Gennie</p>
-                  <p className="text-[11px] text-muted">Generate any recipe</p>
+                  <p className="text-[13px] font-bold text-ink">Recipe Studio</p>
+                  <p className="text-[11px] text-muted">Create reliable recipes for any cuisine</p>
                 </div>
               </Link>
               <Link href={toolHref('plate-profit')}
@@ -226,9 +248,16 @@ export default function TopNav() {
                 <span className="text-green">◎</span>
                 <div>
                   <p className="text-[13px] font-bold text-ink">Plate Profit</p>
-                  <p className="text-[11px] text-muted">Calculate your margin</p>
+                  <p className="text-[11px] text-muted">Cost dishes and know your margin</p>
                 </div>
               </Link>
+
+              <p className="text-[10px] font-bold uppercase tracking-wide text-muted/60 px-3 pt-2 pb-1">Coming soon</p>
+              <div className="px-3 pb-1 flex flex-wrap gap-1.5">
+                {['Weekly Dashboard', 'Profit Leak Audit', 'SOP Builder', 'Training Manuals', 'Business Blueprint'].map(name => (
+                  <span key={name} className="text-[11px] text-muted/60 bg-cream px-2 py-1 rounded-full">{name}</span>
+                ))}
+              </div>
 
               <div className="h-px bg-border my-2" />
 
@@ -237,7 +266,7 @@ export default function TopNav() {
                   Dashboard
                 </Link>
               )}
-              <Link href="/blog" className="block px-3 py-2.5 text-[13px] font-medium text-ink hover:bg-cream rounded-[10px] transition-colors">Blog</Link>
+              <Link href="/blog" className="block px-3 py-2.5 text-[13px] font-medium text-ink hover:bg-cream rounded-[10px] transition-colors">Journal</Link>
               <Link href="/contact" className="block px-3 py-2.5 text-[13px] font-medium text-ink hover:bg-cream rounded-[10px] transition-colors">Contact</Link>
 
               <div className="h-px bg-border my-2" />

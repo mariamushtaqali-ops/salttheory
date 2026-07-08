@@ -3,7 +3,7 @@ import Link from 'next/link'
 import NewsletterSignup from '@/components/ui/NewsletterSignup'
 
 export const metadata = {
-  title: 'Blog — Salt Theory',
+  title: 'Journal — Salt Theory',
   description: 'Recipes, pricing tips, and food business insights for Asian food businesses.',
 }
 
@@ -19,7 +19,7 @@ export default async function BlogPage() {
     <>
       <main className="max-w-[860px] mx-auto px-6 py-12">
         <div className="mb-10">
-          <div className="eyebrow mb-3">Salt Theory Blog</div>
+          <div className="eyebrow mb-3">The Salt Theory Journal</div>
           <h1 className="font-serif text-[40px] md:text-[52px] text-ink mb-4 leading-tight">
             Recipes, pricing & food business insights
           </h1>

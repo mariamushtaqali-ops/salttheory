@@ -31,10 +31,10 @@ export default async function PlateProfitPage() {
         <div className="flex items-center justify-between bg-cream border border-border
                         rounded-[10px] px-4 py-2.5 mb-5 text-[12px]">
           <span className="text-muted">
-            <span className="font-bold text-ink">{costingCount}</span> of <span className="font-bold text-ink">{limit}</span> free costings saved
+            You have <span className="font-bold text-ink">{Math.max(limit - costingCount, 0)}</span> free costings remaining.
           </span>
           {!canCost && (
-            <a href="/account" className="text-orange font-bold hover:underline">Upgrade →</a>
+            <a href="/account" className="text-orange font-bold hover:underline">Unlock Unlimited →</a>
           )}
         </div>
       )}

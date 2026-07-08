@@ -4,12 +4,12 @@ import TopNav from '@/components/layout/TopNav'
 import './globals.css'
 
 export const metadata: Metadata = {
-  title: 'Salt Theory — Recipe Gennie & Plate Profit',
+  title: 'Salt Theory — Recipe Studio & Plate Profit',
   description: 'AI-powered recipe generator and food costing tool for Asian food businesses. Generate any recipe, know your margin, grow with confidence.',
   keywords: ['recipe generator', 'food costing', 'Asian recipes', 'Pakistani recipes', 'food business', 'plate profit'],
   openGraph: {
-    title: 'Salt Theory — Create · Sell · Grow',
-    description: 'AI tools for food businesses. Recipe Gennie generates any recipe. Plate Profit shows your exact margin.',
+    title: 'Salt Theory — Create · Price · Run',
+    description: 'AI tools for food businesses. Recipe Studio generates any recipe. Plate Profit shows your exact margin.',
     url: 'https://salttheorylab.com',
     siteName: 'Salt Theory',
     type: 'website',

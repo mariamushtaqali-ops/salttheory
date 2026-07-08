@@ -161,7 +161,7 @@ export default function RecipeForm({ canGenerate, usageCount }: {
 
       <button onClick={handleGenerate} disabled={loading || !canGenerate}
         className="btn-primary w-full py-3.5 text-[14px] disabled:opacity-50 disabled:cursor-not-allowed">
-        {loading ? 'Generating your recipe…' : '✦ Generate Recipe'}
+        {loading ? 'Creating your recipe…' : '✦ Create Recipe'}
       </button>
 
       {!canGenerate && (
@@ -181,7 +181,7 @@ function RecipeResult({ recipe, onDownload }: { recipe: RecipeOutput; onDownload
     <div className="card p-5 mt-4">
       <div className="flex items-start justify-between mb-3 gap-3">
         <div>
-          <div className="eyebrow mb-2">Recipe Gennie</div>
+          <div className="eyebrow mb-2">Recipe Studio</div>
           <h2 className="font-serif text-2xl text-ink">{recipe.title}</h2>
         </div>
         <button onClick={onDownload}

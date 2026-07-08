@@ -49,7 +49,7 @@ export default async function DashboardPage() {
 
   // Merge and sort recent activity
   const activity = [
-    ...(recentRecipes ?? []).map(r => ({ type: 'recipe' as const, name: r.dish_name, meta: `Recipe Gennie · ${timeAgo(r.created_at)}`, id: r.id })),
+    ...(recentRecipes ?? []).map(r => ({ type: 'recipe' as const, name: r.dish_name, meta: `Recipe Studio · ${timeAgo(r.created_at)}`, id: r.id })),
     ...(recentCostings ?? []).map(c => ({ type: 'costing' as const, name: `${c.dish_name} — ${c.margin_pct}% margin`, meta: `Plate Profit · ${timeAgo(c.created_at)}`, id: c.id })),
   ].slice(0, 5)
 
@@ -108,32 +108,32 @@ export default async function DashboardPage() {
             className="bg-orange text-white text-[12px] font-bold px-4 py-2
                        rounded-full flex-shrink-0 hover:bg-[#C85A2C] transition-colors"
           >
-            Upgrade ✦
+            Unlock Unlimited ✦
           </Link>
         </div>
       )}
 
       {/* Tools */}
-      <p className="section-label text-[10px] font-bold uppercase tracking-[0.1em] text-muted mb-2.5">Your tools</p>
+      <p className="section-label text-[10px] font-bold uppercase tracking-[0.1em] text-muted mb-2.5">Your modules</p>
       <div className="grid grid-cols-2 gap-3 mb-5">
         <Link href="/recipe-gennie" className="card p-4 relative overflow-hidden hover:-translate-y-1 hover:shadow-lg transition-all">
           <div className="absolute top-0 left-0 right-0 h-[3px] bg-orange" />
-          <h3 className="font-serif text-[18px] mb-1">Recipe Gennie</h3>
+          <h3 className="font-serif text-[18px] mb-1">Recipe Studio</h3>
           <p className="text-[12px] text-muted leading-relaxed mb-3">Generate any recipe, any cuisine</p>
-          <span className="text-[12px] font-bold text-orange">Generate ✦</span>
+          <span className="text-[12px] font-bold text-orange">Create Recipe ✦</span>
         </Link>
         <Link href="/plate-profit" className="card p-4 relative overflow-hidden hover:-translate-y-1 hover:shadow-lg transition-all">
           <div className="absolute top-0 left-0 right-0 h-[3px] bg-green" />
           <h3 className="font-serif text-[18px] mb-1">Plate Profit</h3>
           <p className="text-[12px] text-muted leading-relaxed mb-3">Cost a dish, know your margin</p>
-          <span className="text-[12px] font-bold text-green">Cost a dish ✦</span>
+          <span className="text-[12px] font-bold text-green">Cost My Dish ✦</span>
         </Link>
       </div>
 
       {/* Recent activity */}
       {activity.length > 0 && (
         <>
-          <p className="section-label text-[10px] font-bold uppercase tracking-[0.1em] text-muted mb-2.5">Recent activity</p>
+          <p className="section-label text-[10px] font-bold uppercase tracking-[0.1em] text-muted mb-2.5">Recent work</p>
           <div className="space-y-2">
             {activity.map((item, i) => (
               <div key={i} className="card px-4 py-3 flex items-center gap-3 hover:border-orange transition-colors cursor-pointer">

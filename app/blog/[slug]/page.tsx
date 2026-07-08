@@ -20,7 +20,7 @@ export default async function BlogPostPage({ params }: { params: { slug: string 
       
       <main className="flex-1 max-w-[720px] mx-auto w-full px-6 py-12">
         <Link href="/blog" className="text-[12px] font-bold text-muted hover:text-orange transition-colors mb-6 block">
-          ← Back to blog
+          ← Back to journal
         </Link>
 
         <p className="text-[11px] font-bold uppercase tracking-[0.1em] text-muted mb-3">
@@ -61,7 +61,7 @@ export default async function BlogPostPage({ params }: { params: { slug: string 
         <div className="mt-6 grid grid-cols-2 gap-4">
           <Link href="/auth/signup"
             className="card p-4 hover:-translate-y-1 hover:shadow-md transition-all border-t-2 border-t-orange">
-            <p className="text-[11px] font-bold uppercase tracking-wide text-orange mb-1">Recipe Gennie</p>
+            <p className="text-[11px] font-bold uppercase tracking-wide text-orange mb-1">Recipe Studio</p>
             <p className="text-[13px] font-semibold text-ink mb-1">Generate any recipe</p>
             <p className="text-[11px] text-muted">Free — 5 recipes/month</p>
           </Link>
@@ -82,7 +82,7 @@ export default async function BlogPostPage({ params }: { params: { slug: string 
             <span className="font-serif text-[16px] text-white">Salt Theory</span>
           </div>
           <div className="flex gap-5 text-[12px] text-white/40">
-            <Link href="/blog" className="hover:text-white transition-colors">Blog</Link>
+            <Link href="/blog" className="hover:text-white transition-colors">Journal</Link>
             <Link href="/contact" className="hover:text-white transition-colors">Contact</Link>
             <a href="https://instagram.com/salttheorylab" target="_blank" rel="noopener noreferrer"
               className="hover:text-white transition-colors">Instagram</a>
