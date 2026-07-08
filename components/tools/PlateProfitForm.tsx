@@ -1,5 +1,5 @@
 'use client'
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import toast from 'react-hot-toast'
 import { useRouter } from 'next/navigation'
 
@@ -119,6 +119,230 @@ function CurrencyInput({ sym, value, onChange, placeholder = '0' }: {
   )
 }
 
+// ── Loading screen shown briefly after "Calculate margin" ──
+const ANALYZING_STEPS = [
+  'Calculating ingredient costs',
+  'Reviewing operating costs',
+  'Comparing margins',
+  'Looking for profit leaks',
+  'Preparing recommendations',
+]
+
+function AnalyzingScreen() {
+  const [step, setStep] = useState(0)
+  useEffect(() => {
+    const delays = [300, 700, 1150, 1600, 2050]
+    const timers = delays.map((t, i) => setTimeout(() => setStep(i + 1), t))
+    return () => timers.forEach(clearTimeout)
+  }, [])
+  return (
+    <div className="card p-8 text-center">
+      <h3 className="font-serif text-[20px] text-ink mb-6">Analyzing your business…</h3>
+      <div className="space-y-3 max-w-[280px] mx-auto text-left">
+        {ANALYZING_STEPS.map((label, i) => (
+          <div key={label}
+            className={`flex items-center gap-2.5 transition-opacity duration-300 ${i < step ? 'opacity-100' : 'opacity-30'}`}>
+            <span className={`w-4 h-4 rounded-full flex items-center justify-center flex-shrink-0 border transition-colors duration-300
+              ${i < step ? 'bg-green border-green' : 'border-border'}`}>
+              {i < step && (
+                <svg width="8" height="6" viewBox="0 0 8 6" fill="none">
+                  <path d="M1 3l2 2 4-4" stroke="white" strokeWidth="1.3" strokeLinecap="round" strokeLinejoin="round"/>
+                </svg>
+              )}
+            </span>
+            <span className="text-[12px] text-muted">{label}</span>
+          </div>
+        ))}
+      </div>
+    </div>
+  )
+}
+
+// ── Pure, deterministic business-intelligence helpers ──
+// No AI — everything here is a formula derived from the same `results`
+// object and `opCosts` state that the existing engine already produces.
+
+function computeHealthScores(results: any, opCosts: OpCosts) {
+  const margin = results.platResults[0]?.margin ?? 0
+  const foodCostOfTotal = results.totalCost > 0 ? (results.ingCost / results.totalCost) * 100 : 0
+
+  const pricingScore = margin >= 40 ? 10 : margin >= 30 ? 9 : margin >= 20 ? 7 : margin >= 10 ? 5 : 3
+  const foodCostScore = foodCostOfTotal <= 50 ? 10 : foodCostOfTotal <= 65 ? 8 : foodCostOfTotal <= 80 ? 6 : 4
+
+  const coreOpCost = (parseFloat(opCosts.labour) || 0) + (parseFloat(opCosts.utilities) || 0)
+    + (parseFloat(opCosts.transport) || 0) + (parseFloat(opCosts.marketing) || 0) + (parseFloat(opCosts.other) || 0)
+  const opCostRatio = results.totalCost > 0 ? coreOpCost / results.totalCost : 0
+  const opCostScore = coreOpCost === 0 ? 5 : opCostRatio <= 0.25 ? 9 : opCostRatio <= 0.4 ? 7 : 5
+
+  const packaging = parseFloat(opCosts.packaging) || 0
+  const packagingScore = packaging > 0 ? 10 : 5
+
+  const healthyPlats = results.platResults.filter((p: any) => p.margin >= 25).length
+  const platformScore = results.platResults.length > 0
+    ? Math.round((healthyPlats / results.platResults.length) * 10) : 5
+
+  const overall = Math.round(((pricingScore + foodCostScore + opCostScore + packagingScore + platformScore) / 50) * 100)
+
+  return { pricingScore, foodCostScore, opCostScore, packagingScore, platformScore, overall, foodCostOfTotal: Math.round(foodCostOfTotal) }
+}
+
+function starRating(overall: number) {
+  if (overall >= 90) return { stars: 5, label: 'Excellent' }
+  if (overall >= 75) return { stars: 4, label: 'Very Good' }
+  if (overall >= 60) return { stars: 3, label: 'Good' }
+  if (overall >= 40) return { stars: 2, label: 'Needs Work' }
+  return { stars: 1, label: 'At Risk' }
+}
+
+function generateInsights(results: any, opCosts: OpCosts, foodCostOfTotal: number) {
+  const insights: { type: 'good' | 'warn'; title: string; desc: string }[] = []
+  const margin = results.platResults[0]?.margin ?? 0
+
+  if (foodCostOfTotal <= 35) {
+    insights.push({ type: 'good', title: 'Excellent Food Cost', desc: 'Your food cost is within the recommended range.' })
+  } else if (foodCostOfTotal > 50) {
+    insights.push({ type: 'warn', title: 'High Food Cost', desc: 'Ingredients are taking up more of your cost than usual.' })
+  }
+
+  if (margin >= 30) {
+    insights.push({ type: 'good', title: 'Healthy Margin', desc: 'Your overall margin is higher than average.' })
+  } else if (margin < 20) {
+    insights.push({ type: 'warn', title: 'Thin Margin', desc: 'Your margin is below the healthy 20–30% range.' })
+  }
+
+  const commission = parseFloat(opCosts.commission) || 0
+  if (commission > 0 && results.totalCost > 0 && commission / results.totalCost > 0.15) {
+    insights.push({ type: 'warn', title: 'Delivery Apps', desc: 'Delivery commissions are reducing your profits.' })
+  }
+
+  if (opCosts.utilities !== '' && (parseFloat(opCosts.utilities) || 0) > 0
+      && (parseFloat(opCosts.utilities) || 0) < results.totalCost * 0.02) {
+    insights.push({ type: 'warn', title: 'Utilities', desc: 'Utility costs appear lower than expected. Please verify your estimates.' })
+  }
+
+  if (!opCosts.marketing || parseFloat(opCosts.marketing) === 0) {
+    insights.push({ type: 'warn', title: 'Marketing', desc: 'No marketing cost entered. Many businesses forget this expense.' })
+  }
+
+  if (!opCosts.labour || parseFloat(opCosts.labour) === 0) {
+    insights.push({ type: 'warn', title: 'Labour', desc: 'No labour cost entered. Even solo kitchens should account for their time.' })
+  }
+
+  return insights
+}
+
+function generateProfitLeaks(results: any, opCosts: OpCosts, sym: string) {
+  const leaks: { title: string; desc: string; impact: string }[] = []
+  const packaging = parseFloat(opCosts.packaging) || 0
+  const commission = parseFloat(opCosts.commission) || 0
+  const foodCostPct = results.totalCost > 0 ? (results.ingCost / results.totalCost) * 100 : 0
+
+  if (packaging > 0 && results.totalCost > 0 && packaging / results.totalCost > 0.15) {
+    leaks.push({ title: 'Packaging cost high', desc: 'Packaging is a large share of your total cost.', impact: `${sym} ${Math.round(packaging)} per dish` })
+  }
+  if (!opCosts.marketing || parseFloat(opCosts.marketing) === 0) {
+    leaks.push({ title: 'Marketing cost missing', desc: 'No marketing spend recorded — many businesses underestimate this.', impact: 'Possibly underpriced' })
+  }
+  if (opCosts.utilities !== '' && (parseFloat(opCosts.utilities) || 0) > 0
+      && (parseFloat(opCosts.utilities) || 0) < results.totalCost * 0.02) {
+    leaks.push({ title: 'Utilities very low', desc: 'Gas, electricity and water costs seem underestimated.', impact: 'Possible hidden cost' })
+  }
+  if (!opCosts.labour || parseFloat(opCosts.labour) === 0) {
+    leaks.push({ title: 'Labour missing', desc: 'No cost assigned for cooking or prep time.', impact: "Time isn't free" })
+  }
+  if (foodCostPct > 40) {
+    leaks.push({ title: 'Food cost above 40%', desc: 'Ingredients are consuming a large share of your dish cost.', impact: `${Math.round(foodCostPct)}% of total cost` })
+  }
+  if (commission > 0 && results.totalCost > 0 && commission / results.totalCost > 0.15) {
+    leaks.push({ title: 'Delivery commission high', desc: 'Platform commissions are cutting into your margin.', impact: `${sym} ${Math.round(commission)} per dish` })
+  }
+  return leaks
+}
+
+function buildRecommendation(results: any, dishName: string) {
+  const plats = results.platResults
+  if (plats.length === 0) return null
+  if (plats.length === 1) {
+    const p = plats[0]
+    return p.margin >= 30
+      ? `${dishName} has strong margins on ${p.name}. Keep pricing consistent as your costs change, and revisit this costing if ingredient prices move.`
+      : `${dishName}'s margin on ${p.name} is tighter than ideal. A small price increase or trimming operating costs would help protect your profit.`
+  }
+  const sorted = [...plats].sort((a: any, b: any) => b.margin - a.margin)
+  const best = sorted[0], worst = sorted[sorted.length - 1]
+  const gap = best.margin - worst.margin
+  if (gap >= 15) {
+    return `${dishName} performs well overall. ${best.name} is your most profitable channel at ${best.margin}% margin, while ${worst.name} trails at ${worst.margin}%. If you can shift orders toward ${best.name}, your profit per dish improves without changing anything else.`
+  }
+  return `${dishName} holds a fairly consistent margin across your platforms (${worst.margin}%–${best.margin}%). Your pricing is well balanced — the next lever is reducing ingredient or operating costs rather than changing prices.`
+}
+
+function platformTag(p: any, allPlats: any[]) {
+  const sorted = [...allPlats].sort((a, b) => b.margin - a.margin)
+  const isBest = sorted[0]?.name === p.name
+  const isWorst = allPlats.length > 1 && sorted[sorted.length - 1]?.name === p.name
+  const nameLower = p.name.toLowerCase()
+  if (nameLower.includes('delivery')) return 'Commission reducing profit'
+  if (isBest) return p.margin >= 30 ? 'Highest profit' : 'Best available'
+  if (isWorst) return 'Lower margin'
+  return 'Solid margin'
+}
+
+// Same formula the engine already uses for minPrice (totalCost / (1 - margin)),
+// just applied at three margin targets instead of one. No new calculation logic.
+function computePriceTiers(totalCost: number) {
+  return {
+    minimum:     Math.round(totalCost / 0.70), // 30% margin
+    recommended: Math.round(totalCost / 0.60), // 40% margin
+    premium:     Math.round(totalCost / 0.50), // 50% margin
+  }
+}
+
+const HEALTH_CATEGORIES = [
+  { key: 'pricingScore',  glyph: '✦', label: 'Pricing' },
+  { key: 'foodCostScore', glyph: '◎', label: 'Food Cost' },
+  { key: 'opCostScore',   glyph: '⚙', label: 'Operating Costs' },
+  { key: 'packagingScore',glyph: '▢', label: 'Packaging' },
+  { key: 'platformScore', glyph: '↗', label: 'Platform Pricing' },
+] as const
+
+function categoryExplanation(key: string, score: number): string {
+  const tier = score >= 9 ? 'great' : score >= 7 ? 'good' : score >= 5 ? 'okay' : 'weak'
+  const text: Record<string, Record<string, string>> = {
+    pricingScore: {
+      great: 'Your pricing comfortably covers costs with room to spare.',
+      good: 'Your pricing is solid, with a healthy margin.',
+      okay: 'Your margin is workable but has little cushion.',
+      weak: 'Pricing is too tight — costs are eating your margin.',
+    },
+    foodCostScore: {
+      great: 'Ingredients make up a lean share of your total cost.',
+      good: 'Ingredient costs are within a reasonable range.',
+      okay: 'Ingredients are taking up more of your cost than ideal.',
+      weak: 'Ingredients dominate your cost — worth reviewing suppliers or portions.',
+    },
+    opCostScore: {
+      great: 'Operating costs are well controlled relative to your total cost.',
+      good: 'Operating costs are reasonably in line.',
+      okay: 'Operating costs are a bit high relative to total cost.',
+      weak: 'Operating costs — or missing entries — need a closer look.',
+    },
+    packagingScore: {
+      great: 'Packaging cost is accounted for in your pricing.',
+      good: 'Packaging cost is accounted for in your pricing.',
+      okay: 'Packaging cost looks light — double check it\u2019s accurate.',
+      weak: 'No packaging cost entered — this is easy to forget and underprice.',
+    },
+    platformScore: {
+      great: 'Every platform you sell on holds a healthy margin.',
+      good: 'Most of your platforms hold a healthy margin.',
+      okay: 'Some platforms are pulling your average margin down.',
+      weak: 'Most platforms are underperforming on margin.',
+    },
+  }
+  return text[key]?.[tier] ?? ''
+}
+
 export default function PlateProfitForm({ canCost, usageCount }: {
   canCost: boolean; usageCount: number
 }) {
@@ -139,6 +363,14 @@ export default function PlateProfitForm({ canCost, usageCount }: {
   const [results, setResults] = useState<any>(null)
   const [saving, setSaving] = useState(false)
   const [firstSuccess, setFirstSuccess] = useState(false)
+  const [analyzing, setAnalyzing] = useState(false)
+  const [openGroups, setOpenGroups] = useState<Record<string, boolean>>({
+    ingredients: true, operating: true, packaging: true, commission: true, other: true,
+  })
+
+  function toggleGroup(key: string) {
+    setOpenGroups(prev => ({ ...prev, [key]: !prev[key] }))
+  }
 
   const sym = CURRENCY_SYMBOLS[currency]
 
@@ -209,6 +441,17 @@ export default function PlateProfitForm({ canCost, usageCount }: {
       totalCost, costPerServing: Math.round(totalCost / srv),
       srv, ingBreakdown, opBreakdown, platResults, minPrice
     })
+  }
+
+  function handleCalculateClick() {
+    if (!dishName.trim()) { toast.error('Enter a dish name'); return }
+    const activePlats = platforms.filter(p => parseFloat(p.price) > 0)
+    if (activePlats.length === 0) { toast.error('Enter at least one selling price'); return }
+    setAnalyzing(true)
+    setTimeout(() => {
+      calculate()
+      setAnalyzing(false)
+    }, 2200)
   }
 
   async function handleSave() {
@@ -460,7 +703,7 @@ export default function PlateProfitForm({ canCost, usageCount }: {
       </div>
 
       {/* CALCULATE */}
-      <button onClick={calculate} disabled={!canCost}
+      <button onClick={handleCalculateClick} disabled={!canCost || analyzing}
         className="btn-green w-full py-3.5 text-[14px] disabled:opacity-50 disabled:cursor-not-allowed">
         ✦ Calculate margin
       </button>
@@ -472,8 +715,11 @@ export default function PlateProfitForm({ canCost, usageCount }: {
         </p>
       )}
 
+      {/* ANALYZING */}
+      {analyzing && <AnalyzingScreen />}
+
       {/* FIRST-COSTING SUCCESS SCREEN */}
-      {firstSuccess && results && (
+      {!analyzing && firstSuccess && results && (
         <div className="card p-6 text-center">
           <p className="text-[28px] mb-2">🎉</p>
           <h3 className="font-serif text-[22px] text-ink mb-1">Great job!</h3>
@@ -523,119 +769,343 @@ export default function PlateProfitForm({ canCost, usageCount }: {
       )}
 
       {/* RESULTS */}
-      {results && !firstSuccess && (
-        <div className="card p-5">
-          <h3 className="font-serif text-[22px] mb-1">{dishName}</h3>
-          <p className="text-[12px] text-muted mb-5">
-            Full breakdown · {results.srv} serving{results.srv > 1 ? 's' : ''}
-          </p>
+      {results && !firstSuccess && (() => {
+        const health = computeHealthScores(results, opCosts)
+        const rating = starRating(health.overall)
+        const insights = generateInsights(results, opCosts, health.foodCostOfTotal)
+        const leaks = generateProfitLeaks(results, opCosts, sym)
+        const recommendation = buildRecommendation(results, dishName)
+        const priceTiers = computePriceTiers(results.totalCost)
+        const primary = results.platResults[0]
+        const primaryMargin = primary?.margin ?? 0
+        const foodCostPct = 100 - primaryMargin
+        const healthColor = health.overall >= 75 ? 'text-green' : health.overall >= 50 ? 'text-yellow' : 'text-orange'
+        const healthRing = health.overall >= 75 ? '#7A8B5C' : health.overall >= 50 ? '#F3C766' : '#E96B3C'
 
-          {/* Donut chart */}
-          {(() => {
-            const primaryMargin = results.platResults[0]?.margin ?? 0
-            const costPct = 100 - primaryMargin
-            const sz = 130, sw = 22, r = (sz - sw) / 2
-            const circ = 2 * Math.PI * r
-            const costArc = (costPct / 100) * circ
-            const marginArc = (primaryMargin / 100) * circ
-            return (
-              <div className="flex flex-col items-center mb-5">
-                <div className="relative">
-                  <svg width={sz} height={sz} style={{transform:"rotate(-90deg)"}}>
-                    <circle cx={sz/2} cy={sz/2} r={r} fill="none" stroke="#E8DDD0" strokeWidth={sw}/>
-                    <circle cx={sz/2} cy={sz/2} r={r} fill="none" stroke="#E96B3C" strokeWidth={sw}
-                      strokeDasharray={`${costArc} ${circ}`} strokeLinecap="round"/>
-                    <circle cx={sz/2} cy={sz/2} r={r} fill="none" stroke="#7A8B5C" strokeWidth={sw}
-                      strokeDasharray={`${marginArc} ${circ}`} strokeDashoffset={-costArc} strokeLinecap="round"/>
+        const packagingItems = results.opBreakdown.filter((r: any) => r.name === 'Packaging')
+        const commissionItems = results.opBreakdown.filter((r: any) => r.name === 'Delivery partner commission')
+        const otherItems = results.opBreakdown.filter((r: any) => r.name === 'Other')
+        const operatingItems = results.opBreakdown.filter((r: any) =>
+          !['Packaging', 'Delivery partner commission', 'Other'].includes(r.name))
+        const groupSum = (items: any[]) => items.reduce((s, r) => s + r.cost, 0)
+
+        return (
+          <div className="space-y-4 animate-fadeIn">
+
+            {/* ── EXECUTIVE SUMMARY ─────────────────────────── */}
+            <div className="card p-6">
+              <h3 className="font-serif text-[24px] text-ink mb-4 text-center">{dishName}</h3>
+
+              <div className="flex flex-col items-center mb-6">
+                <p className="text-[10px] font-bold uppercase tracking-wide text-muted mb-2">Business Health</p>
+                <div className="relative w-[120px] h-[120px] flex items-center justify-center mb-2">
+                  <svg width="120" height="120" style={{ transform: 'rotate(-90deg)' }}>
+                    <circle cx="60" cy="60" r="52" fill="none" stroke="#E8DDD0" strokeWidth="10" />
+                    <circle cx="60" cy="60" r="52" fill="none" stroke={healthRing} strokeWidth="10"
+                      strokeDasharray={`${(health.overall / 100) * 2 * Math.PI * 52} ${2 * Math.PI * 52}`}
+                      strokeLinecap="round" style={{ transition: 'stroke-dasharray 0.6s ease-out' }} />
                   </svg>
-                  <div className="absolute inset-0 flex flex-col items-center justify-center">
-                    <span className="font-serif text-[22px] text-green leading-none">{primaryMargin}%</span>
-                    <span className="text-[10px] text-muted">margin</span>
+                  <div className="absolute flex flex-col items-center">
+                    <span className={`font-serif text-[30px] leading-none ${healthColor}`}>{health.overall}</span>
+                    <span className="text-[10px] text-muted">/ 100</span>
                   </div>
                 </div>
-                <div className="flex gap-5 text-[11px] text-muted mt-2">
-                  <span><span className="inline-block w-2 h-2 rounded-full bg-orange mr-1.5"/>Cost {costPct}%</span>
-                  <span><span className="inline-block w-2 h-2 rounded-full bg-green mr-1.5"/>Margin {primaryMargin}%</span>
+                <p className={`text-[13px] font-bold ${healthColor}`}>
+                  {'★'.repeat(rating.stars)}{'☆'.repeat(5 - rating.stars)} {rating.label}
+                </p>
+              </div>
+
+              <div className="grid grid-cols-2 gap-3">
+                <div className="bg-cream rounded-[10px] p-3.5 text-center">
+                  <p className="text-[10px] text-muted uppercase tracking-wide mb-1">Food Cost</p>
+                  <p className={`font-serif text-[22px] ${foodCostPct <= 35 ? 'text-green' : 'text-orange'}`}>{foodCostPct}%</p>
+                </div>
+                <div className="bg-cream rounded-[10px] p-3.5 text-center">
+                  <p className="text-[10px] text-muted uppercase tracking-wide mb-1">Margin</p>
+                  <p className={`font-serif text-[22px] ${primaryMargin >= 25 ? 'text-green' : 'text-orange'}`}>{primaryMargin}%</p>
+                </div>
+                <div className="bg-cream rounded-[10px] p-3.5 text-center">
+                  <p className="text-[10px] text-muted uppercase tracking-wide mb-1">Total Cost</p>
+                  <p className="font-serif text-[22px] text-ink">{sym} {results.totalCost.toLocaleString()}</p>
+                </div>
+                <div className="bg-cream rounded-[10px] p-3.5 text-center">
+                  <p className="text-[10px] text-muted uppercase tracking-wide mb-1">Selling Price</p>
+                  <p className="font-serif text-[22px] text-ink">{sym} {(primary?.sell ?? 0).toLocaleString()}</p>
                 </div>
               </div>
-            )
-          })()}
-          <p className="text-[10px] font-bold uppercase tracking-wide text-muted mb-2">Cost breakdown</p>
-          <div className="mb-5">
-            {results.ingBreakdown.map((r: any) => (
-              <div key={r.name} className="flex justify-between py-1.5 border-b border-border text-[12px]">
-                <span className="text-muted">{r.name}</span>
-                <span className="text-orange">{sym} {r.cost.toLocaleString()}</span>
-              </div>
-            ))}
-            <div className="flex justify-between py-1.5 border-b border-border text-[12px] font-semibold">
-              <span className="text-muted">Total ingredients</span>
-              <span className="text-orange">{sym} {results.ingCost.toLocaleString()}</span>
             </div>
-            {results.opBreakdown.map((r: any) => (
-              <div key={r.name} className="flex justify-between py-1.5 border-b border-border text-[12px]">
-                <span className="text-muted">{r.name}</span>
-                <span className="text-orange">{sym} {r.cost.toLocaleString()}</span>
+
+            {/* ── BUSINESS HEALTH BREAKDOWN ─────────────────── */}
+            <div className="card p-5">
+              <p className="text-[10px] font-bold uppercase tracking-wide text-muted mb-3">Business Health Breakdown</p>
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
+                {HEALTH_CATEGORIES.map(cat => {
+                  const score = (health as any)[cat.key] as number
+                  const color = score >= 8 ? 'text-green' : score >= 5 ? 'text-yellow' : 'text-orange'
+                  return (
+                    <div key={cat.key} className="border border-border rounded-[10px] p-3.5">
+                      <div className="flex items-center justify-between mb-1.5">
+                        <span className="flex items-center gap-2 text-[12px] font-bold text-ink">
+                          <span className="text-orange">{cat.glyph}</span> {cat.label}
+                        </span>
+                        <span className={`text-[12px] font-bold ${color}`}>{score}/10</span>
+                      </div>
+                      <p className="text-[11px] text-muted leading-relaxed">{categoryExplanation(cat.key, score)}</p>
+                    </div>
+                  )
+                })}
               </div>
-            ))}
-            <div className="flex justify-between py-2.5 border-t-2 border-border mt-1 text-[13px] font-bold">
-              <span className="text-ink">Total cost per dish</span>
-              <span className="text-orange">{sym} {results.totalCost.toLocaleString()}</span>
             </div>
-            {results.srv > 1 && (
-              <div className="flex justify-between py-1.5 text-[12px]">
-                <span className="text-muted">Cost per serving</span>
-                <span className="text-orange">{sym} {results.costPerServing.toLocaleString()}</span>
+
+            {/* ── AI INSIGHTS ────────────────────────────────── */}
+            {insights.length > 0 && (
+              <div className="card p-5">
+                <p className="text-[10px] font-bold uppercase tracking-wide text-muted mb-3">Insights</p>
+                <div className="space-y-2">
+                  {insights.map((ins, i) => (
+                    <div key={i} className={`flex gap-3 rounded-[10px] p-3.5 ${ins.type === 'good' ? 'bg-green/5' : 'bg-orange/5'}`}>
+                      <span className={`flex-shrink-0 ${ins.type === 'good' ? 'text-green' : 'text-orange'}`}>
+                        {ins.type === 'good' ? '✓' : '⚠'}
+                      </span>
+                      <div>
+                        <p className="text-[12px] font-bold text-ink">{ins.title}</p>
+                        <p className="text-[11px] text-muted leading-relaxed">{ins.desc}</p>
+                      </div>
+                    </div>
+                  ))}
+                </div>
               </div>
             )}
-          </div>
 
-          <p className="text-[10px] font-bold uppercase tracking-wide text-muted mb-3">Margin by platform</p>
-          <div className="space-y-3 mb-5">
-            {results.platResults.map((p: any) => {
-              const barColor = p.margin >= 30 ? 'bg-green' : p.margin >= 20 ? 'bg-yellow' : 'bg-orange'
-              return (
-                <div key={p.name} className="border border-border rounded-[10px] p-4">
-                  <div className="flex justify-between items-center mb-2">
-                    <span className="text-[13px] font-bold text-ink">{p.name}</span>
-                    <span className="text-[13px] font-bold">{sym} {p.sell.toLocaleString()}</span>
+            {/* ── MARGIN BY PLATFORM ────────────────────────── */}
+            <div className="card p-5">
+              <p className="text-[10px] font-bold uppercase tracking-wide text-muted mb-3">Margin by Platform</p>
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                {results.platResults.map((p: any) => (
+                  <div key={p.name} className="border border-border rounded-[10px] p-4 hover:border-green/50 hover:shadow-sm transition-all duration-200">
+                    <p className="text-[13px] font-bold text-ink mb-2">{p.name}</p>
+                    <div className="flex justify-between text-[11px] text-muted mb-1">
+                      <span>Profit</span>
+                      <span className="font-bold text-ink">{sym} {p.profit.toLocaleString()}</span>
+                    </div>
+                    <div className="flex justify-between text-[11px] text-muted mb-2">
+                      <span>Margin</span>
+                      <span className={`font-bold ${p.margin >= 25 ? 'text-green' : 'text-orange'}`}>{p.margin}%</span>
+                    </div>
+                    <p className="text-[11px] text-muted italic">{platformTag(p, results.platResults)}</p>
                   </div>
-                  <div className="h-2 bg-border rounded-full mb-2 overflow-hidden">
-                    <div className={`h-full rounded-full ${barColor}`}
-                      style={{ width: `${Math.max(0, Math.min(100, p.margin))}%` }} />
+                ))}
+              </div>
+            </div>
+
+            {/* ── RECOMMENDED PRICING ───────────────────────── */}
+            <div className="card p-5">
+              <p className="text-[10px] font-bold uppercase tracking-wide text-muted mb-3">Recommended Pricing</p>
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                <div className="border border-border rounded-[10px] p-4 text-center">
+                  <p className="text-[10px] text-muted uppercase tracking-wide mb-1">Minimum Price</p>
+                  <p className="font-serif text-[20px] text-ink mb-1">{sym} {priceTiers.minimum.toLocaleString()}</p>
+                  <p className="text-[10px] text-muted">Lowest price you should charge</p>
+                </div>
+                <div className="border-2 border-green rounded-[10px] p-4 text-center relative bg-green/5">
+                  <div className="absolute -top-2.5 left-1/2 -translate-x-1/2 bg-green text-white text-[9px] font-bold px-2 py-0.5 rounded-full whitespace-nowrap">
+                    Recommended
                   </div>
-                  <div className="flex justify-between text-[11px]">
-                    <span className={`font-bold ${p.margin >= 20 ? 'text-green' : 'text-orange'}`}>
-                      {p.margin}% margin
-                    </span>
-                    <span className="text-muted">
-                      Profit: {sym} {p.profit.toLocaleString()}
-                      {results.srv > 1 && ` · ${sym} ${p.profitPerServing}/serving`}
-                    </span>
-                  </div>
-                  {p.margin < 20 && (
-                    <div className="mt-2 text-[11px] text-orange bg-orange/5 rounded-[8px] p-2">
-                      Low margin — for 30% margin, minimum price: {sym} {results.minPrice.toLocaleString()}
+                  <p className="text-[10px] text-muted uppercase tracking-wide mb-1 mt-1">Recommended Price</p>
+                  <p className="font-serif text-[20px] text-green mb-1">{sym} {priceTiers.recommended.toLocaleString()}</p>
+                  <p className="text-[10px] text-muted">Best balance of sales and profit</p>
+                </div>
+                <div className="border border-border rounded-[10px] p-4 text-center">
+                  <p className="text-[10px] text-muted uppercase tracking-wide mb-1">Premium Price</p>
+                  <p className="font-serif text-[20px] text-ink mb-1">{sym} {priceTiers.premium.toLocaleString()}</p>
+                  <p className="text-[10px] text-muted">For premium positioning</p>
+                </div>
+              </div>
+            </div>
+
+            {/* ── BIGGEST PROFIT LEAKS ──────────────────────── */}
+            {leaks.length > 0 && (
+              <div className="card p-5">
+                <p className="text-[10px] font-bold uppercase tracking-wide text-muted mb-3">Biggest Profit Leaks</p>
+                <div className="space-y-2">
+                  {leaks.map((leak, i) => (
+                    <div key={i} className="border border-orange/20 bg-orange/5 rounded-[10px] p-3.5">
+                      <div className="flex items-start justify-between gap-3 mb-1">
+                        <p className="text-[12px] font-bold text-ink">{leak.title}</p>
+                        <span className="text-[11px] font-bold text-orange flex-shrink-0">{leak.impact}</span>
+                      </div>
+                      <p className="text-[11px] text-muted leading-relaxed">{leak.desc}</p>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+
+            {/* ── TODAY'S RECOMMENDATION ────────────────────── */}
+            {recommendation && (
+              <div className="card p-6 bg-ink">
+                <p className="text-[10px] font-bold uppercase tracking-wide text-white/40 mb-3">Today's Recommendation</p>
+                <p className="text-[14px] text-white leading-relaxed">{recommendation}</p>
+              </div>
+            )}
+
+            {/* ── COST BREAKDOWN (collapsible groups) ───────── */}
+            <div className="card p-5">
+              <p className="text-[10px] font-bold uppercase tracking-wide text-muted mb-3">Cost Breakdown</p>
+              <div className="space-y-2">
+
+                {/* Ingredients */}
+                <div className="border border-border rounded-[10px] overflow-hidden">
+                  <button onClick={() => toggleGroup('ingredients')}
+                    className="w-full flex items-center justify-between px-4 py-3 hover:bg-cream transition-colors">
+                    <span className="text-[12px] font-bold text-ink">Ingredients</span>
+                    <div className="flex items-center gap-2">
+                      <span className="text-[12px] font-bold text-orange">{sym} {results.ingCost.toLocaleString()}</span>
+                      <span className={`text-muted text-[10px] transition-transform ${openGroups.ingredients ? 'rotate-180' : ''}`}>▾</span>
+                    </div>
+                  </button>
+                  {openGroups.ingredients && (
+                    <div className="px-4 pb-3 border-t border-border">
+                      {results.ingBreakdown.map((r: any) => (
+                        <div key={r.name} className="flex justify-between py-1.5 text-[12px]">
+                          <span className="text-muted">{r.name}</span>
+                          <span className="text-orange">{sym} {r.cost.toLocaleString()}</span>
+                        </div>
+                      ))}
                     </div>
                   )}
                 </div>
-              )
-            })}
-          </div>
 
-          <div className="flex gap-3">
-            <button onClick={handleSave} disabled={saving || !canCost}
-              className="flex-1 btn-green py-2.5 text-[13px] disabled:opacity-50">
-              {saving ? 'Saving...' : 'Save costing'}
-            </button>
-            <button onClick={() => window.print()}
-              className="flex-1 border border-border rounded-full py-2.5 text-[13px]
-                         font-bold text-ink hover:border-green hover:text-green transition-colors">
-              Export PDF
-            </button>
+                {/* Operating Costs */}
+                {operatingItems.length > 0 && (
+                  <div className="border border-border rounded-[10px] overflow-hidden">
+                    <button onClick={() => toggleGroup('operating')}
+                      className="w-full flex items-center justify-between px-4 py-3 hover:bg-cream transition-colors">
+                      <span className="text-[12px] font-bold text-ink">Operating Costs</span>
+                      <div className="flex items-center gap-2">
+                        <span className="text-[12px] font-bold text-orange">{sym} {groupSum(operatingItems).toLocaleString()}</span>
+                        <span className={`text-muted text-[10px] transition-transform ${openGroups.operating ? 'rotate-180' : ''}`}>▾</span>
+                      </div>
+                    </button>
+                    {openGroups.operating && (
+                      <div className="px-4 pb-3 border-t border-border">
+                        {operatingItems.map((r: any) => (
+                          <div key={r.name} className="flex justify-between py-1.5 text-[12px]">
+                            <span className="text-muted">{r.name}</span>
+                            <span className="text-orange">{sym} {r.cost.toLocaleString()}</span>
+                          </div>
+                        ))}
+                      </div>
+                    )}
+                  </div>
+                )}
+
+                {/* Packaging */}
+                {packagingItems.length > 0 && (
+                  <div className="border border-border rounded-[10px] overflow-hidden">
+                    <button onClick={() => toggleGroup('packaging')}
+                      className="w-full flex items-center justify-between px-4 py-3 hover:bg-cream transition-colors">
+                      <span className="text-[12px] font-bold text-ink">Packaging</span>
+                      <div className="flex items-center gap-2">
+                        <span className="text-[12px] font-bold text-orange">{sym} {groupSum(packagingItems).toLocaleString()}</span>
+                        <span className={`text-muted text-[10px] transition-transform ${openGroups.packaging ? 'rotate-180' : ''}`}>▾</span>
+                      </div>
+                    </button>
+                    {openGroups.packaging && (
+                      <div className="px-4 pb-3 border-t border-border">
+                        {packagingItems.map((r: any) => (
+                          <div key={r.name} className="flex justify-between py-1.5 text-[12px]">
+                            <span className="text-muted">{r.name}</span>
+                            <span className="text-orange">{sym} {r.cost.toLocaleString()}</span>
+                          </div>
+                        ))}
+                      </div>
+                    )}
+                  </div>
+                )}
+
+                {/* Commission */}
+                {commissionItems.length > 0 && (
+                  <div className="border border-border rounded-[10px] overflow-hidden">
+                    <button onClick={() => toggleGroup('commission')}
+                      className="w-full flex items-center justify-between px-4 py-3 hover:bg-cream transition-colors">
+                      <span className="text-[12px] font-bold text-ink">Commission</span>
+                      <div className="flex items-center gap-2">
+                        <span className="text-[12px] font-bold text-orange">{sym} {groupSum(commissionItems).toLocaleString()}</span>
+                        <span className={`text-muted text-[10px] transition-transform ${openGroups.commission ? 'rotate-180' : ''}`}>▾</span>
+                      </div>
+                    </button>
+                    {openGroups.commission && (
+                      <div className="px-4 pb-3 border-t border-border">
+                        {commissionItems.map((r: any) => (
+                          <div key={r.name} className="flex justify-between py-1.5 text-[12px]">
+                            <span className="text-muted">{r.name}</span>
+                            <span className="text-orange">{sym} {r.cost.toLocaleString()}</span>
+                          </div>
+                        ))}
+                      </div>
+                    )}
+                  </div>
+                )}
+
+                {/* Other */}
+                {otherItems.length > 0 && (
+                  <div className="border border-border rounded-[10px] overflow-hidden">
+                    <button onClick={() => toggleGroup('other')}
+                      className="w-full flex items-center justify-between px-4 py-3 hover:bg-cream transition-colors">
+                      <span className="text-[12px] font-bold text-ink">Other</span>
+                      <div className="flex items-center gap-2">
+                        <span className="text-[12px] font-bold text-orange">{sym} {groupSum(otherItems).toLocaleString()}</span>
+                        <span className={`text-muted text-[10px] transition-transform ${openGroups.other ? 'rotate-180' : ''}`}>▾</span>
+                      </div>
+                    </button>
+                    {openGroups.other && (
+                      <div className="px-4 pb-3 border-t border-border">
+                        {otherItems.map((r: any) => (
+                          <div key={r.name} className="flex justify-between py-1.5 text-[12px]">
+                            <span className="text-muted">{r.name}</span>
+                            <span className="text-orange">{sym} {r.cost.toLocaleString()}</span>
+                          </div>
+                        ))}
+                      </div>
+                    )}
+                  </div>
+                )}
+
+                {/* Total */}
+                <div className="flex justify-between items-center bg-ink rounded-[10px] px-4 py-3.5 mt-3">
+                  <span className="text-[13px] font-bold text-white">Total Cost</span>
+                  <span className="font-serif text-[18px] text-white">{sym} {results.totalCost.toLocaleString()}</span>
+                </div>
+                {results.srv > 1 && (
+                  <div className="flex justify-between px-1 text-[12px]">
+                    <span className="text-muted">Cost per serving</span>
+                    <span className="text-orange font-semibold">{sym} {results.costPerServing.toLocaleString()}</span>
+                  </div>
+                )}
+              </div>
+            </div>
+
+            {/* ── SAVE ───────────────────────────────────────── */}
+            <div className="card p-5">
+              <div className="flex gap-3 mb-2">
+                <button onClick={handleSave} disabled={saving || !canCost}
+                  className="flex-1 btn-green py-2.5 text-[13px] disabled:opacity-50">
+                  {saving ? 'Saving...' : 'Save to Library'}
+                </button>
+                <button onClick={() => window.print()}
+                  className="flex-1 border border-border rounded-full py-2.5 text-[13px]
+                             font-bold text-ink hover:border-green hover:text-green transition-colors">
+                  Download PDF
+                </button>
+              </div>
+              <p className="text-[11px] text-muted text-center">
+                Saved costings become available inside your Cost Library.
+              </p>
+            </div>
           </div>
-        </div>
-      )}
+        )
+      })()}
     </div>
   )
 }
