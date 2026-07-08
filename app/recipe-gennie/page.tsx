@@ -1,13 +1,36 @@
 import { createClient } from '@/lib/supabase/server'
-import { redirect } from 'next/navigation'
 import AppShell from '@/components/layout/AppShell'
 import RecipeForm from '@/components/tools/RecipeForm'
 import { LIMITS } from '@/types'
+import { getAnonId, getAnonUsage } from '@/lib/anon'
 
 export default async function RecipeGenniePage() {
   const supabase = createClient()
   const { data: { user } } = await supabase.auth.getUser()
-  if (!user) redirect('/auth/login')
+
+  // ── Anonymous visitor — PR7 allows one free generation, no account needed ──
+  if (!user) {
+    const anonUsage = await getAnonUsage(getAnonId())
+    return (
+      <AppShell>
+        <div className="mb-6">
+          <div className="eyebrow mb-2">Recipe Studio</div>
+          <h1 className="font-serif text-[28px] md:text-[32px] text-ink">What would you like to cook?</h1>
+        </div>
+
+        <div className="flex items-center justify-between bg-cream border border-border
+                        rounded-[10px] px-4 py-2.5 mb-5 text-[12px]">
+          <span className="text-muted">
+            {anonUsage.recipe_used
+              ? "You've used your free recipe — create a free account to keep going."
+              : 'Try one free recipe — no account needed.'}
+          </span>
+        </div>
+
+        <RecipeForm canGenerate={!anonUsage.recipe_used} usageCount={0} hasCosting={false} isAnon />
+      </AppShell>
+    )
+  }
 
   const { data: profile } = await supabase
     .from('profiles')

@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation'
 import { createClient } from '@/lib/supabase/client'
 import Logo from '@/components/ui/Logo'
 import toast from 'react-hot-toast'
+import { track } from '@/lib/track'
 
 export default function SignupPage() {
   const router = useRouter()
@@ -51,6 +52,7 @@ export default function SignupPage() {
       })
 
       toast.success('Account created! Check your email to confirm.')
+      track('Account created')
       router.push('/dashboard')
     } catch (e: any) {
       toast.error(e.message ?? 'Sign up failed')

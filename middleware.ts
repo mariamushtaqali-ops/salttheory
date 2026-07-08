@@ -24,12 +24,23 @@ export async function middleware(request: NextRequest) {
   const { data: { user } } = await supabase.auth.getUser()
   const { pathname } = request.nextUrl
 
-  // Protected routes — redirect to login if not authenticated
-  const protectedPaths = ['/dashboard', '/recipe-gennie', '/plate-profit', '/account', '/admin']
+  // Protected routes — redirect to login if not authenticated.
+  // Recipe Studio and Plate Profit are intentionally NOT here — PR7 allows
+  // one free anonymous use of each before an account is required.
+  const protectedPaths = ['/dashboard', '/account', '/admin']
   const isProtected = protectedPaths.some(p => pathname.startsWith(p))
 
   if (isProtected && !user) {
     return NextResponse.redirect(new URL('/auth/login', request.url))
+  }
+
+  // Anonymous session cookie — used only to enforce the one-free-use limit
+  // on Recipe Studio / Plate Profit server-side. Not linked to any personal
+  // data. Set once per browser, lasts a year.
+  if (!user && !request.cookies.get('st_anon_id')) {
+    supabaseResponse.cookies.set('st_anon_id', crypto.randomUUID(), {
+      httpOnly: true, sameSite: 'lax', maxAge: 60 * 60 * 24 * 365, path: '/',
+    })
   }
 
   // Admin route — extra check

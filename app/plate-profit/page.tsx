@@ -1,13 +1,36 @@
 import { createClient } from '@/lib/supabase/server'
-import { redirect } from 'next/navigation'
 import AppShell from '@/components/layout/AppShell'
 import PlateProfitForm from '@/components/tools/PlateProfitForm'
 import { LIMITS } from '@/types'
+import { getAnonId, getAnonUsage } from '@/lib/anon'
 
 export default async function PlateProfitPage() {
   const supabase = createClient()
   const { data: { user } } = await supabase.auth.getUser()
-  if (!user) redirect('/auth/login')
+
+  // ── Anonymous visitor — PR7 allows one free costing, no account needed ──
+  if (!user) {
+    const anonUsage = await getAnonUsage(getAnonId())
+    return (
+      <AppShell>
+        <div className="mb-6">
+          <div className="eyebrow green mb-2">Plate Profit</div>
+          <h1 className="font-serif text-[28px] md:text-[32px] text-ink">Cost a dish</h1>
+        </div>
+
+        <div className="flex items-center justify-between bg-cream border border-border
+                        rounded-[10px] px-4 py-2.5 mb-5 text-[12px]">
+          <span className="text-muted">
+            {anonUsage.costing_used
+              ? "You've used your free costing — create a free account to keep going."
+              : 'Try one full costing, free — no account needed.'}
+          </span>
+        </div>
+
+        <PlateProfitForm canCost={!anonUsage.costing_used} usageCount={0} isAnon />
+      </AppShell>
+    )
+  }
 
   const { data: profile } = await supabase
     .from('profiles')

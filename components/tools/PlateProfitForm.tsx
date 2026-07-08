@@ -2,6 +2,8 @@
 import { useState, useEffect } from 'react'
 import toast from 'react-hot-toast'
 import { useRouter } from 'next/navigation'
+import { track } from '@/lib/track'
+import SignupSlideOver from '@/components/ui/SignupSlideOver'
 
 const SPOON_G: Record<string,number> = { tsp: 4, tbsp: 12, cup: 200 }
 
@@ -370,6 +372,28 @@ function businessTip(top: { name: string; cost: number; pct: number } | null, fo
   return 'Review your top two or three ingredient costs first — small supplier or portion changes there usually move your margin more than trimming operating costs.'
 }
 
+// Same math as generateOpportunities() below, just summed into one figure
+// for the anonymous "celebration" card — no new calculation logic.
+function estimateMonthlyOpportunity(results: any, ingredients: Ingredient[]) {
+  let total = 0
+  const sell = results.platResults[0]?.sell ?? 0
+  if (sell > 0) {
+    const bump = Math.max(10, Math.round((sell * 0.03) / 5) * 5)
+    total += monthlyFromPerDish(bump)
+  }
+  const highWastage = ingredients.filter(i => (parseFloat(i.wastage) || 0) >= 8 && i.name)
+  if (highWastage.length > 0) {
+    const savingPerDish = highWastage.reduce((s, i) => {
+      const currentWaste = parseFloat(i.wastage) || 0
+      const reducedWaste = currentWaste / 2
+      const savingShare = 1 - (1 - reducedWaste / 100) / (1 - currentWaste / 100)
+      return s + i.cost * savingShare
+    }, 0)
+    total += monthlyFromPerDish(savingPerDish)
+  }
+  return Math.round(total)
+}
+
 function generateOpportunities(
   results: any, ingredients: Ingredient[], opCosts: OpCosts, sym: string
 ) {
@@ -494,8 +518,8 @@ function categoryExplanation(key: string, score: number): string {
   return text[key]?.[tier] ?? ''
 }
 
-export default function PlateProfitForm({ canCost, usageCount }: {
-  canCost: boolean; usageCount: number
+export default function PlateProfitForm({ canCost, usageCount, isAnon = false }: {
+  canCost: boolean; usageCount: number; isAnon?: boolean
 }) {
   const router = useRouter()
   const [currency, setCurrency] = useState<Currency>('PKR')
@@ -519,6 +543,17 @@ export default function PlateProfitForm({ canCost, usageCount }: {
     ingredients: true, operating: true, packaging: true, commission: true, other: true,
   })
   const [hoveredSlice, setHoveredSlice] = useState<string | null>(null)
+  const [showCelebration, setShowCelebration] = useState(false)
+  const [showSignupPanel, setShowSignupPanel] = useState(false)
+
+  useEffect(() => {
+    track('Plate Profit opened', { anon: isAnon })
+  }, [isAnon])
+
+  function requestSignup(trigger: string) {
+    setShowSignupPanel(true)
+    track('Signup panel shown', { trigger, tool: 'costing' })
+  }
 
   function toggleGroup(key: string) {
     setOpenGroups(prev => ({ ...prev, [key]: !prev[key] }))
@@ -599,14 +634,25 @@ export default function PlateProfitForm({ canCost, usageCount }: {
     if (!dishName.trim()) { toast.error('Enter a dish name'); return }
     const activePlats = platforms.filter(p => parseFloat(p.price) > 0)
     if (activePlats.length === 0) { toast.error('Enter at least one selling price'); return }
+    if (!canCost && isAnon) { requestSignup('costing_limit_reached'); return }
     setAnalyzing(true)
     setTimeout(() => {
       calculate()
       setAnalyzing(false)
+      track('Costing completed', { anon: isAnon })
+      if (isAnon) {
+        setShowCelebration(true)
+        requestSignup('costing_completed')
+      }
     }, 2200)
   }
 
   async function handleSave() {
+    if (isAnon) {
+      track('Save attempted', { tool: 'costing', anon: true })
+      requestSignup('save')
+      return
+    }
     if (!results || !canCost) return
     setSaving(true)
     try {
@@ -860,10 +906,17 @@ export default function PlateProfitForm({ canCost, usageCount }: {
         ✦ Calculate margin
       </button>
 
-      {!canCost && (
+      {!canCost && !isAnon && (
         <p className="text-center text-[12px] text-muted">
           You have used {usageCount} free costings.{' '}
           <a href="/account" className="text-orange font-bold">Upgrade to save more →</a>
+        </p>
+      )}
+
+      {!canCost && isAnon && (
+        <p className="text-center text-[12px] text-muted">
+          Ready to build your restaurant operating system?{' '}
+          <a href="/auth/signup" className="text-orange font-bold">Create your free account →</a>
         </p>
       )}
 
@@ -927,6 +980,7 @@ export default function PlateProfitForm({ canCost, usageCount }: {
         const top = topCostIngredient(results.ingBreakdown)
         const leaks = generateProfitLeaks(results, opCosts, sym, top)
         const opportunities = generateOpportunities(results, ingredients, opCosts, sym)
+        const opportunityTotal = estimateMonthlyOpportunity(results, ingredients)
         const recommendation = buildRecommendation(results, dishName)
         const narrative = consultantNarrative(dishName, results, top, sym)
         const heroSummary = heroVerdict(results, top)
@@ -1376,11 +1430,18 @@ export default function PlateProfitForm({ canCost, usageCount }: {
             {/* ── SAVE ───────────────────────────────────────── */}
             <div className="card p-5">
               <div className="flex gap-3 mb-2">
-                <button onClick={handleSave} disabled={saving || !canCost}
+                <button onClick={handleSave} disabled={saving || (!canCost && !isAnon)}
                   className="flex-1 btn-green py-2.5 text-[13px] disabled:opacity-50">
                   {saving ? 'Saving...' : 'Save to Library'}
                 </button>
-                <button onClick={() => window.print()}
+                <button onClick={() => {
+                  if (isAnon) {
+                    track('Export attempted', { tool: 'costing', anon: true })
+                    requestSignup('export')
+                    return
+                  }
+                  window.print()
+                }}
                   className="flex-1 border border-border rounded-full py-2.5 text-[13px]
                              font-bold text-ink hover:border-green hover:text-green transition-colors">
                   Download PDF
@@ -1390,6 +1451,33 @@ export default function PlateProfitForm({ canCost, usageCount }: {
                 Saved costings become available inside your Cost Library.
               </p>
             </div>
+
+            {/* ── ANONYMOUS CELEBRATION + SIGNUP ────────────── */}
+            {isAnon && showCelebration && (
+              <div className="card p-6 text-center bg-cream border-2 border-green/20">
+                <p className="text-[12px] font-bold text-green mb-3">✓ Business analysis complete</p>
+                <div className="grid grid-cols-2 gap-3 mb-4 max-w-[360px] mx-auto text-left">
+                  <div className="bg-white rounded-[10px] p-3">
+                    <p className="text-[10px] text-muted uppercase tracking-wide mb-1">Business Health</p>
+                    <p className="font-serif text-[20px] text-ink">{health.overall}/100</p>
+                  </div>
+                  <div className="bg-white rounded-[10px] p-3">
+                    <p className="text-[10px] text-muted uppercase tracking-wide mb-1">Monthly Opportunity</p>
+                    <p className="font-serif text-[20px] text-green">{sym} {opportunityTotal.toLocaleString()}</p>
+                  </div>
+                </div>
+                {recommendation && (
+                  <p className="text-[13px] text-ink leading-relaxed max-w-[420px] mx-auto">{recommendation}</p>
+                )}
+              </div>
+            )}
+
+            {isAnon && showSignupPanel && (
+              <SignupSlideOver onContinueExploring={() => {
+                setShowSignupPanel(false)
+                track('Continue Exploring selected', { tool: 'costing' })
+              }} />
+            )}
           </div>
         )
       })()}

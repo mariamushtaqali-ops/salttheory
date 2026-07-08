@@ -1,8 +1,10 @@
 'use client'
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import toast from 'react-hot-toast'
 import type { RecipeOutput } from '@/types'
+import { track } from '@/lib/track'
+import SignupSlideOver from '@/components/ui/SignupSlideOver'
 
 const OCCASIONS = ['Any', 'Weeknight', 'Weekend', 'Dinner party', 'Eid', 'Dawat', 'Tiffin', 'Iftar', 'Wedding']
 const CUISINES  = ['Any cuisine', 'South Asian', 'Middle Eastern', 'Southeast Asian', 'East Asian', 'Mediterranean', 'Western', 'Fusion']
@@ -73,8 +75,8 @@ function downloadRecipePDF(recipe: RecipeOutput) {
   toast.success('Recipe downloaded!')
 }
 
-export default function RecipeForm({ canGenerate, usageCount, hasCosting }: {
-  canGenerate: boolean; usageCount: number; hasCosting: boolean
+export default function RecipeForm({ canGenerate, usageCount, hasCosting, isAnon = false }: {
+  canGenerate: boolean; usageCount: number; hasCosting: boolean; isAnon?: boolean
 }) {
   const router = useRouter()
   const [loading, setLoading]               = useState(false)
@@ -88,14 +90,27 @@ export default function RecipeForm({ canGenerate, usageCount, hasCosting }: {
   const [includeCost, setIncludeCost]       = useState(false)
   const [result, setResult]                 = useState<RecipeOutput | null>(null)
   const [firstSuccess, setFirstSuccess]     = useState(false)
+  const [showSignupPanel, setShowSignupPanel] = useState(false)
+
+  useEffect(() => {
+    track('Recipe Studio opened', { anon: isAnon })
+  }, [isAnon])
 
   const finalServings = servings === 'Custom'
     ? (customServings ? `${customServings} people` : '4–6')
     : servings
 
+  function requestSignup(trigger: string) {
+    setShowSignupPanel(true)
+    track('Signup panel shown', { trigger, tool: 'recipe' })
+  }
+
   async function handleGenerate() {
     if (!dish.trim()) { toast.error('Please enter a dish name'); return }
-    if (!canGenerate) { toast.error('Upgrade to continue — free limit reached'); return }
+    if (!canGenerate) {
+      if (isAnon) { requestSignup('recipe_limit_reached'); return }
+      toast.error('Upgrade to continue — free limit reached'); return
+    }
     if (servings === 'Custom' && !customServings) { toast.error('Please enter number of guests'); return }
     setLoading(true)
     setResult(null)
@@ -109,13 +124,27 @@ export default function RecipeForm({ canGenerate, usageCount, hasCosting }: {
       const data = await res.json()
       setResult(data.recipe)
       toast.success('Recipe generated!')
-      if (usageCount === 0) setFirstSuccess(true)
+      track('Recipe completed', { anon: isAnon })
+      if (isAnon) {
+        requestSignup('recipe_completed')
+      } else if (usageCount === 0) {
+        setFirstSuccess(true)
+      }
       router.refresh()
     } catch (e: any) {
       toast.error(e.message ?? 'Something went wrong')
     } finally {
       setLoading(false)
     }
+  }
+
+  function handleDownloadClick(recipe: RecipeOutput) {
+    if (isAnon) {
+      track('Export attempted', { tool: 'recipe', anon: true })
+      requestSignup('download')
+      return
+    }
+    downloadRecipePDF(recipe)
   }
 
   return (
@@ -166,14 +195,21 @@ export default function RecipeForm({ canGenerate, usageCount, hasCosting }: {
         {loading ? 'Creating your recipe…' : '✦ Create Recipe'}
       </button>
 
-      {!canGenerate && (
+      {!canGenerate && !isAnon && (
         <p className="text-center text-[12px] text-muted mt-3">
           You have used {usageCount} free recipes.{' '}
           <a href="/account" className="text-orange font-bold">Upgrade for unlimited →</a>
         </p>
       )}
 
-      {firstSuccess && result && (
+      {!canGenerate && isAnon && (
+        <p className="text-center text-[12px] text-muted mt-3">
+          Ready to build your restaurant operating system?{' '}
+          <a href="/auth/signup" className="text-orange font-bold">Create your free account →</a>
+        </p>
+      )}
+
+      {firstSuccess && result && !isAnon && (
         <div className="card p-5 mt-4 text-center bg-cream border-green/30">
           {hasCosting ? (
             <>
@@ -198,7 +234,16 @@ export default function RecipeForm({ canGenerate, usageCount, hasCosting }: {
         </div>
       )}
 
-      {result && <RecipeResult recipe={result} onDownload={() => downloadRecipePDF(result)} />}
+      {result && <RecipeResult recipe={result} onDownload={() => handleDownloadClick(result)} />}
+
+      {isAnon && showSignupPanel && result && (
+        <div className="mt-4">
+          <SignupSlideOver onContinueExploring={() => {
+            setShowSignupPanel(false)
+            track('Continue Exploring selected', { tool: 'recipe' })
+          }} />
+        </div>
+      )}
     </div>
   )
 }
