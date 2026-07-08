@@ -1,6 +1,7 @@
 import { createClient } from '@/lib/supabase/server'
 import { redirect } from 'next/navigation'
 import AppShell from '@/components/layout/AppShell'
+import ProfileCompletionForm from '@/components/tools/ProfileCompletionForm'
 import { LIMITS } from '@/types'
 
 export default async function AccountPage() {
@@ -15,6 +16,7 @@ export default async function AccountPage() {
     .single()
 
   const tier = (profile?.tier ?? 'free') as 'free' | 'pro'
+  const profileComplete = !!(profile?.last_name && profile?.role)
 
   return (
     <AppShell userEmail={user.email}>
@@ -65,6 +67,12 @@ export default async function AccountPage() {
               Send payment via EasyPaisa/JazzCash,<br />we'll upgrade you within 24 hours
             </p>
           </div>
+        </div>
+      )}
+
+      {!profileComplete && (
+        <div className="mb-4">
+          <ProfileCompletionForm userId={user.id} initialLastName={profile?.last_name ?? ''} />
         </div>
       )}
 

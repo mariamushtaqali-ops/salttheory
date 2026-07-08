@@ -11,7 +11,7 @@ export default async function RecipeGenniePage() {
 
   const { data: profile } = await supabase
     .from('profiles')
-    .select('tier, recipe_count')
+    .select('tier, recipe_count, costing_count')
     .eq('id', user.id)
     .single()
 
@@ -39,7 +39,7 @@ export default async function RecipeGenniePage() {
         </div>
       )}
 
-      <RecipeForm canGenerate={canGenerate} usageCount={recipeCount} />
+      <RecipeForm canGenerate={canGenerate} usageCount={recipeCount} hasCosting={(profile?.costing_count ?? 0) > 0} />
     </AppShell>
   )
 }

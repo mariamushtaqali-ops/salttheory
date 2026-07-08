@@ -138,6 +138,7 @@ export default function PlateProfitForm({ canCost, usageCount }: {
   const [platforms, setPlatforms] = useState<Platform[]>(DEFAULT_PLATFORMS)
   const [results, setResults] = useState<any>(null)
   const [saving, setSaving] = useState(false)
+  const [firstSuccess, setFirstSuccess] = useState(false)
 
   const sym = CURRENCY_SYMBOLS[currency]
 
@@ -228,6 +229,7 @@ export default function PlateProfitForm({ canCost, usageCount }: {
       })
       if (!res.ok) throw new Error()
       toast.success('Costing saved!')
+      if (usageCount === 0) setFirstSuccess(true)
       router.refresh()
     } catch { toast.error('Could not save — try again') }
     finally { setSaving(false) }
@@ -470,8 +472,58 @@ export default function PlateProfitForm({ canCost, usageCount }: {
         </p>
       )}
 
+      {/* FIRST-COSTING SUCCESS SCREEN */}
+      {firstSuccess && results && (
+        <div className="card p-6 text-center">
+          <p className="text-[28px] mb-2">🎉</p>
+          <h3 className="font-serif text-[22px] text-ink mb-1">Great job!</h3>
+          <p className="text-[13px] text-muted mb-6">You've completed your first food costing.</p>
+
+          <div className="grid grid-cols-2 gap-3 mb-6 text-left">
+            {(() => {
+              const margin = results.platResults[0]?.margin ?? 0
+              const costPct = 100 - margin
+              const health = margin >= 30
+                ? { label: 'Healthy margin', color: 'text-green' }
+                : margin >= 20
+                ? { label: 'Workable margin', color: 'text-yellow' }
+                : { label: 'Needs attention', color: 'text-orange' }
+              return (
+                <>
+                  <div className="bg-cream rounded-[10px] p-3">
+                    <p className="text-[10px] text-muted uppercase tracking-wide mb-1">Food cost %</p>
+                    <p className="font-serif text-[20px] text-orange">{costPct}%</p>
+                  </div>
+                  <div className="bg-cream rounded-[10px] p-3">
+                    <p className="text-[10px] text-muted uppercase tracking-wide mb-1">Estimated margin</p>
+                    <p className="font-serif text-[20px] text-green">{margin}%</p>
+                  </div>
+                  <div className="bg-cream rounded-[10px] p-3">
+                    <p className="text-[10px] text-muted uppercase tracking-wide mb-1">Recommended price</p>
+                    <p className="font-serif text-[20px] text-ink">{sym} {results.minPrice.toLocaleString()}</p>
+                  </div>
+                  <div className="bg-cream rounded-[10px] p-3">
+                    <p className="text-[10px] text-muted uppercase tracking-wide mb-1">Overall health</p>
+                    <p className={`font-serif text-[16px] ${health.color}`}>{health.label}</p>
+                  </div>
+                </>
+              )
+            })()}
+          </div>
+
+          <div className="border-t border-border pt-5">
+            <p className="text-[10px] font-bold uppercase tracking-wide text-muted mb-2">Next recommended step</p>
+            <p className="text-[13px] text-muted mb-4">Create a matching recipe in Recipe Studio.</p>
+            <div className="flex gap-3 justify-center flex-wrap">
+              <a href="/recipe-gennie" className="btn-primary px-6 py-2.5 text-[13px]">Create Recipe</a>
+              <a href="/dashboard" className="btn-secondary px-6 py-2.5 text-[13px]">Back to Dashboard</a>
+            </div>
+          </div>
+        </div>
+      )}
+
       {/* RESULTS */}
-      {results && (
+      {results && !firstSuccess && (
         <div className="card p-5">
           <h3 className="font-serif text-[22px] mb-1">{dishName}</h3>
           <p className="text-[12px] text-muted mb-5">

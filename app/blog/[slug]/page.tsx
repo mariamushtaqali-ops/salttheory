@@ -3,6 +3,7 @@ import { notFound } from 'next/navigation'
 import Logo from '@/components/ui/Logo'
 import Link from 'next/link'
 import NewsletterSignup from '@/components/ui/NewsletterSignup'
+import MarkJournalRead from '@/components/ui/MarkJournalRead'
 
 export default async function BlogPostPage({ params }: { params: { slug: string } }) {
   const supabase = createClient()
@@ -17,7 +18,8 @@ export default async function BlogPostPage({ params }: { params: { slug: string 
 
   return (
     <div className="min-h-screen bg-cream flex flex-col">
-      
+      <MarkJournalRead />
+
       <main className="flex-1 max-w-[720px] mx-auto w-full px-6 py-12">
         <Link href="/blog" className="text-[12px] font-bold text-muted hover:text-orange transition-colors mb-6 block">
           ← Back to journal

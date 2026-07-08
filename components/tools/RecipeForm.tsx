@@ -73,8 +73,8 @@ function downloadRecipePDF(recipe: RecipeOutput) {
   toast.success('Recipe downloaded!')
 }
 
-export default function RecipeForm({ canGenerate, usageCount }: {
-  canGenerate: boolean; usageCount: number
+export default function RecipeForm({ canGenerate, usageCount, hasCosting }: {
+  canGenerate: boolean; usageCount: number; hasCosting: boolean
 }) {
   const router = useRouter()
   const [loading, setLoading]               = useState(false)
@@ -87,6 +87,7 @@ export default function RecipeForm({ canGenerate, usageCount }: {
   const [onHand, setOnHand]                 = useState('')
   const [includeCost, setIncludeCost]       = useState(false)
   const [result, setResult]                 = useState<RecipeOutput | null>(null)
+  const [firstSuccess, setFirstSuccess]     = useState(false)
 
   const finalServings = servings === 'Custom'
     ? (customServings ? `${customServings} people` : '4–6')
@@ -108,6 +109,7 @@ export default function RecipeForm({ canGenerate, usageCount }: {
       const data = await res.json()
       setResult(data.recipe)
       toast.success('Recipe generated!')
+      if (usageCount === 0) setFirstSuccess(true)
       router.refresh()
     } catch (e: any) {
       toast.error(e.message ?? 'Something went wrong')
@@ -169,6 +171,31 @@ export default function RecipeForm({ canGenerate, usageCount }: {
           You have used {usageCount} free recipes.{' '}
           <a href="/account" className="text-orange font-bold">Upgrade for unlimited →</a>
         </p>
+      )}
+
+      {firstSuccess && result && (
+        <div className="card p-5 mt-4 text-center bg-cream border-green/30">
+          {hasCosting ? (
+            <>
+              <p className="font-serif text-[18px] text-ink mb-1">Excellent.</p>
+              <p className="text-[13px] text-muted leading-relaxed max-w-[420px] mx-auto mb-4">
+                Now you have both a documented recipe and an accurate costing. You're already building a business instead of just cooking.
+              </p>
+              <a href="/dashboard" className="btn-primary px-6 py-2.5 text-[13px] inline-flex">Back to Dashboard</a>
+            </>
+          ) : (
+            <>
+              <p className="font-serif text-[18px] text-ink mb-1">Nicely done.</p>
+              <p className="text-[13px] text-muted leading-relaxed max-w-[420px] mx-auto mb-4">
+                That's your first documented recipe. Next, find out exactly what it costs to make.
+              </p>
+              <div className="flex gap-3 justify-center flex-wrap">
+                <a href="/plate-profit" className="btn-primary px-6 py-2.5 text-[13px]">Cost This Dish</a>
+                <a href="/dashboard" className="btn-secondary px-6 py-2.5 text-[13px]">Back to Dashboard</a>
+              </div>
+            </>
+          )}
+        </div>
       )}
 
       {result && <RecipeResult recipe={result} onDownload={() => downloadRecipePDF(result)} />}
