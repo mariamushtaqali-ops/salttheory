@@ -158,6 +158,25 @@ function AnalyzingScreen() {
   )
 }
 
+// ── Small count-up number, used for the Business Score ──
+function AnimatedNumber({ value, className }: { value: number; className?: string }) {
+  const [display, setDisplay] = useState(0)
+  useEffect(() => {
+    setDisplay(0)
+    const duration = 700
+    const start = performance.now()
+    let raf: number
+    function tick(now: number) {
+      const t = Math.min(1, (now - start) / duration)
+      setDisplay(Math.round(value * (1 - Math.pow(1 - t, 3)))) // ease-out cubic
+      if (t < 1) raf = requestAnimationFrame(tick)
+    }
+    raf = requestAnimationFrame(tick)
+    return () => cancelAnimationFrame(raf)
+  }, [value])
+  return <span className={className}>{display}</span>
+}
+
 // ── Pure, deterministic business-intelligence helpers ──
 // No AI — everything here is a formula derived from the same `results`
 // object and `opCosts` state that the existing engine already produces.
@@ -187,74 +206,72 @@ function computeHealthScores(results: any, opCosts: OpCosts) {
 }
 
 function starRating(overall: number) {
-  if (overall >= 90) return { stars: 5, label: 'Excellent' }
-  if (overall >= 75) return { stars: 4, label: 'Very Good' }
-  if (overall >= 60) return { stars: 3, label: 'Good' }
+  if (overall >= 90) return { stars: 5, label: 'Very Healthy' }
+  if (overall >= 75) return { stars: 4, label: 'Healthy' }
+  if (overall >= 60) return { stars: 3, label: 'Fair' }
   if (overall >= 40) return { stars: 2, label: 'Needs Work' }
   return { stars: 1, label: 'At Risk' }
 }
 
-function generateInsights(results: any, opCosts: OpCosts, foodCostOfTotal: number) {
-  const insights: { type: 'good' | 'warn'; title: string; desc: string }[] = []
-  const margin = results.platResults[0]?.margin ?? 0
+// Reference volume used only to translate a per-dish saving/gain into a
+// monthly/annual figure. Declared explicitly in the UI as an assumption —
+// not a claim about the user's actual sales.
+const REFERENCE_DAILY_VOLUME = 25
+const PROJECTION_VOLUMES = [10, 25, 50, 100]
 
-  if (foodCostOfTotal <= 35) {
-    insights.push({ type: 'good', title: 'Excellent Food Cost', desc: 'Your food cost is within the recommended range.' })
-  } else if (foodCostOfTotal > 50) {
-    insights.push({ type: 'warn', title: 'High Food Cost', desc: 'Ingredients are taking up more of your cost than usual.' })
-  }
-
-  if (margin >= 30) {
-    insights.push({ type: 'good', title: 'Healthy Margin', desc: 'Your overall margin is higher than average.' })
-  } else if (margin < 20) {
-    insights.push({ type: 'warn', title: 'Thin Margin', desc: 'Your margin is below the healthy 20–30% range.' })
-  }
-
-  const commission = parseFloat(opCosts.commission) || 0
-  if (commission > 0 && results.totalCost > 0 && commission / results.totalCost > 0.15) {
-    insights.push({ type: 'warn', title: 'Delivery Apps', desc: 'Delivery commissions are reducing your profits.' })
-  }
-
-  if (opCosts.utilities !== '' && (parseFloat(opCosts.utilities) || 0) > 0
-      && (parseFloat(opCosts.utilities) || 0) < results.totalCost * 0.02) {
-    insights.push({ type: 'warn', title: 'Utilities', desc: 'Utility costs appear lower than expected. Please verify your estimates.' })
-  }
-
-  if (!opCosts.marketing || parseFloat(opCosts.marketing) === 0) {
-    insights.push({ type: 'warn', title: 'Marketing', desc: 'No marketing cost entered. Many businesses forget this expense.' })
-  }
-
-  if (!opCosts.labour || parseFloat(opCosts.labour) === 0) {
-    insights.push({ type: 'warn', title: 'Labour', desc: 'No labour cost entered. Even solo kitchens should account for their time.' })
-  }
-
-  return insights
+function monthlyFromPerDish(perDish: number, volume = REFERENCE_DAILY_VOLUME) {
+  return Math.round(perDish * volume * 30)
 }
 
-function generateProfitLeaks(results: any, opCosts: OpCosts, sym: string) {
-  const leaks: { title: string; desc: string; impact: string }[] = []
+// The single most expensive ingredient and its share of total ingredient cost.
+function topCostIngredient(ingBreakdown: { name: string; cost: number }[]) {
+  if (!ingBreakdown.length) return null
+  const totalIng = ingBreakdown.reduce((s, i) => s + i.cost, 0)
+  if (totalIng === 0) return null
+  const top = [...ingBreakdown].sort((a, b) => b.cost - a.cost)[0]
+  return { name: top.name, cost: top.cost, pct: Math.round((top.cost / totalIng) * 100) }
+}
+
+function generateProfitLeaks(
+  results: any, opCosts: OpCosts, sym: string,
+  top: { name: string; cost: number; pct: number } | null
+) {
+  const leaks: { icon: string; title: string; desc: string; impact: string }[] = []
   const packaging = parseFloat(opCosts.packaging) || 0
   const commission = parseFloat(opCosts.commission) || 0
+  const labour = parseFloat(opCosts.labour) || 0
   const foodCostPct = results.totalCost > 0 ? (results.ingCost / results.totalCost) * 100 : 0
 
-  if (packaging > 0 && results.totalCost > 0 && packaging / results.totalCost > 0.15) {
-    leaks.push({ title: 'Packaging cost high', desc: 'Packaging is a large share of your total cost.', impact: `${sym} ${Math.round(packaging)} per dish` })
+  if (top && top.pct >= 50) {
+    const saving = monthlyFromPerDish(top.cost * 0.1)
+    leaks.push({
+      icon: '🔥', title: 'Biggest Profit Leak',
+      desc: `${top.name} accounts for ${top.pct}% of your ingredient cost.`,
+      impact: `Potential monthly savings ${sym} ${saving.toLocaleString()}`,
+    })
+  }
+  if (packaging === 0) {
+    leaks.push({ icon: '⚠', title: 'Packaging missing', desc: "Ignoring packaging cost creates a fake margin, even at a few rupees per order.", impact: 'Untracked expense' })
+  } else if (results.totalCost > 0 && packaging / results.totalCost > 0.15) {
+    leaks.push({ icon: '⚠', title: 'Packaging cost high', desc: 'Packaging is a large share of your total cost.', impact: `${sym} ${Math.round(packaging)} per dish` })
   }
   if (!opCosts.marketing || parseFloat(opCosts.marketing) === 0) {
-    leaks.push({ title: 'Marketing cost missing', desc: 'No marketing spend recorded — many businesses underestimate this.', impact: 'Possibly underpriced' })
+    leaks.push({ icon: '⚠', title: 'Marketing missing', desc: 'No marketing spend recorded — many businesses underestimate this.', impact: 'Possibly underpriced' })
   }
   if (opCosts.utilities !== '' && (parseFloat(opCosts.utilities) || 0) > 0
       && (parseFloat(opCosts.utilities) || 0) < results.totalCost * 0.02) {
-    leaks.push({ title: 'Utilities very low', desc: 'Gas, electricity and water costs seem underestimated.', impact: 'Possible hidden cost' })
+    leaks.push({ icon: '⚠', title: 'Utilities very low', desc: 'Gas, electricity and water costs seem underestimated.', impact: 'Possible hidden cost' })
   }
-  if (!opCosts.labour || parseFloat(opCosts.labour) === 0) {
-    leaks.push({ title: 'Labour missing', desc: 'No cost assigned for cooking or prep time.', impact: "Time isn't free" })
+  if (labour === 0) {
+    leaks.push({ icon: '⚠', title: 'Labour missing', desc: "No cost assigned for cooking or prep time — time isn't free.", impact: 'Untracked expense' })
+  } else if (results.totalCost > 0 && labour / results.totalCost <= 0.15) {
+    leaks.push({ icon: '💡', title: 'Labour looks healthy', desc: 'Labour cost is well controlled relative to your total cost. Keep it there.', impact: `${sym} ${Math.round(labour)}/serving` })
   }
   if (foodCostPct > 40) {
-    leaks.push({ title: 'Food cost above 40%', desc: 'Ingredients are consuming a large share of your dish cost.', impact: `${Math.round(foodCostPct)}% of total cost` })
+    leaks.push({ icon: '⚠', title: 'Food cost above 40%', desc: 'Ingredients are consuming a large share of your dish cost.', impact: `${Math.round(foodCostPct)}% of total cost` })
   }
   if (commission > 0 && results.totalCost > 0 && commission / results.totalCost > 0.15) {
-    leaks.push({ title: 'Delivery commission high', desc: 'Platform commissions are cutting into your margin.', impact: `${sym} ${Math.round(commission)} per dish` })
+    leaks.push({ icon: '⚠', title: 'Delivery commission high', desc: 'Platform commissions are cutting into your margin.', impact: `${sym} ${Math.round(commission)} per dish` })
   }
   return leaks
 }
@@ -277,15 +294,149 @@ function buildRecommendation(results: any, dishName: string) {
   return `${dishName} holds a fairly consistent margin across your platforms (${worst.margin}%–${best.margin}%). Your pricing is well balanced — the next lever is reducing ingredient or operating costs rather than changing prices.`
 }
 
+// Short version for the hero card — the fuller consultantNarrative() below
+// is reserved for the dedicated "AI Restaurant Consultant" section.
+function heroVerdict(results: any, top: { name: string; cost: number; pct: number } | null) {
+  const margin = results.platResults[0]?.margin ?? 0
+  const marginLine = margin >= 30
+    ? 'Excellent margin with healthy pricing.'
+    : margin >= 18
+    ? 'Solid margin, with room to improve.'
+    : 'Margin is tighter than ideal right now.'
+  const ingredientLine = top && top.pct >= 40
+    ? ` Your biggest opportunity is reducing ${top.name.toLowerCase()} cost by around 8%.`
+    : ''
+  const viability = margin >= 20
+    ? ' This dish is commercially viable.'
+    : ' This dish needs a pricing or cost adjustment to be reliably profitable.'
+  return `${marginLine}${ingredientLine}${viability}`
+}
+
+// Longer, conversational "consultant" narrative — deliberately more specific
+// than buildRecommendation() above, naming the actual dominant cost driver.
+function consultantNarrative(
+  dishName: string, results: any,
+  top: { name: string; cost: number; pct: number } | null, sym: string
+) {
+  const margin = results.platResults[0]?.margin ?? 0
+  const marginLine = margin >= 30
+    ? 'Your pricing is healthy.'
+    : margin >= 18
+    ? 'Your pricing is workable, though there is room to improve.'
+    : 'Your pricing is tighter than I\u2019d like to see.'
+
+  let ingredientLine = ''
+  let dollarLine = ''
+  if (top && top.pct >= 40) {
+    ingredientLine = ` However your ${top.name.toLowerCase()} cost is higher than ideal — it alone makes up ${top.pct}% of your ingredients.`
+    const saving10pct = monthlyFromPerDish(top.cost * 0.1)
+    dollarLine = ` If you can negotiate just a 10% better supplier price on ${top.name.toLowerCase()}, your monthly profit could increase by approximately ${sym} ${saving10pct.toLocaleString()}, assuming you sell around ${REFERENCE_DAILY_VOLUME} portions a day.`
+  }
+
+  const closing = margin >= 25
+    ? `I would keep ${dishName} on the menu. Very high perceived value for the cost behind it.`
+    : margin >= 12
+    ? `${dishName} is worth keeping on the menu for now, but I'd revisit pricing next time ingredient costs move.`
+    : `I'd hold off scaling ${dishName} until the margin improves — right now it's doing more work than it's earning.`
+
+  return `${marginLine}${ingredientLine}${dollarLine} ${closing}`
+}
+
+function profitPotential(margin: number, foodCostPct: number) {
+  if (margin >= 35 && foodCostPct <= 35) return { label: 'High', caption: 'Can scale well' }
+  if (margin >= 20) return { label: 'Medium', caption: 'Scales with care' }
+  return { label: 'Low', caption: 'Scaling will strain margin' }
+}
+
+function riskLevel(margin: number, foodCostPct: number) {
+  if (margin >= 30 && foodCostPct <= 40) return { label: 'Low', caption: 'Healthy business' }
+  if (margin >= 15) return { label: 'Medium', caption: 'Watch your costs' }
+  return { label: 'High', caption: 'Margin is fragile' }
+}
+
+function menuVerdict(margin: number, foodCostPct: number) {
+  if (margin >= 25 && foodCostPct <= 40) return { label: 'Definitely', icon: '🟢', desc: 'High margin, high profit, commercially viable.' }
+  if (margin >= 12) return { label: 'Needs work', icon: '⚠', desc: 'Viable, but pricing or costs need attention before this is a strong menu item.' }
+  return { label: 'Reconsider', icon: '❌', desc: 'At current pricing and cost, this dish is unlikely to be reliably profitable.' }
+}
+
+function businessTip(top: { name: string; cost: number; pct: number } | null, foodCostPct: number) {
+  if (top && top.pct >= 60) {
+    return `Since ${top.name.toLowerCase()} represents over ${top.pct}% of your ingredient cost, buying directly from a wholesaler instead of retail could meaningfully increase your margin.`
+  }
+  if (foodCostPct <= 35) {
+    return 'Food cost is healthy. Focus on increasing average order value — add-ons, combos, or slightly larger portions at a small premium — rather than cutting costs further.'
+  }
+  return 'Review your top two or three ingredient costs first — small supplier or portion changes there usually move your margin more than trimming operating costs.'
+}
+
+function generateOpportunities(
+  results: any, ingredients: Ingredient[], opCosts: OpCosts, sym: string
+) {
+  const opportunities: { title: string; desc: string; impact: string }[] = []
+  const sell = results.platResults[0]?.sell ?? 0
+
+  if (sell > 0) {
+    const bump = Math.max(10, Math.round((sell * 0.03) / 5) * 5)
+    const gain = monthlyFromPerDish(bump)
+    opportunities.push({
+      title: `Increase selling price by ${sym} ${bump}`,
+      desc: 'A change this small is unlikely to cause customer resistance.',
+      impact: `+${sym} ${gain.toLocaleString()}/month`,
+    })
+  }
+
+  const highWastage = ingredients.filter(i => (parseFloat(i.wastage) || 0) >= 8 && i.name)
+  if (highWastage.length > 0) {
+    const savingPerDish = highWastage.reduce((s, i) => {
+      const currentWaste = parseFloat(i.wastage) || 0
+      const reducedWaste = currentWaste / 2
+      const savingShare = 1 - (1 - reducedWaste / 100) / (1 - currentWaste / 100)
+      return s + i.cost * savingShare
+    }, 0)
+    const monthlySaving = monthlyFromPerDish(savingPerDish)
+    if (monthlySaving > 0) {
+      const label = highWastage.length === 1 ? highWastage[0].name : `${highWastage.length} ingredients`
+      opportunities.push({
+        title: `Reduce wastage on ${label}`,
+        desc: 'Halving your current wastage on these items adds straight to your margin.',
+        impact: `Save ${sym} ${monthlySaving.toLocaleString()}/month`,
+      })
+    }
+  }
+
+  const packaging = parseFloat(opCosts.packaging) || 0
+  if (packaging > 0) {
+    const perOrderSaving = Math.round(packaging * 0.15)
+    if (perOrderSaving > 0) {
+      opportunities.push({
+        title: 'Shop around for packaging suppliers',
+        desc: 'Small suppliers often beat retail pricing at modest volume.',
+        impact: `Potential saving ${sym} ${perOrderSaving}/order`,
+      })
+    }
+  }
+
+  return opportunities
+}
+
+function computeMonthlyProjection(sell: number, profitPerUnit: number) {
+  return PROJECTION_VOLUMES.map(volume => {
+    const monthlyRevenue = Math.round(sell * volume * 30)
+    const monthlyProfit = Math.round(profitPerUnit * volume * 30)
+    return { volume, monthlyRevenue, monthlyProfit, annualProfit: monthlyProfit * 12 }
+  })
+}
+
 function platformTag(p: any, allPlats: any[]) {
   const sorted = [...allPlats].sort((a, b) => b.margin - a.margin)
   const isBest = sorted[0]?.name === p.name
   const isWorst = allPlats.length > 1 && sorted[sorted.length - 1]?.name === p.name
   const nameLower = p.name.toLowerCase()
-  if (nameLower.includes('delivery')) return 'Commission reducing profit'
-  if (isBest) return p.margin >= 30 ? 'Highest profit' : 'Best available'
-  if (isWorst) return 'Lower margin'
-  return 'Solid margin'
+  if (nameLower.includes('delivery') || nameLower.includes('foodpanda')) return { label: 'Commission hurting margin', tone: 'warn' as const }
+  if (isBest) return { label: p.margin >= 30 ? 'Best' : 'Best available', tone: 'good' as const }
+  if (isWorst) return { label: 'Lower margin', tone: 'warn' as const }
+  return { label: 'Healthy', tone: 'neutral' as const }
 }
 
 // Same formula the engine already uses for minPrice (totalCost / (1 - margin)),
@@ -367,6 +518,7 @@ export default function PlateProfitForm({ canCost, usageCount }: {
   const [openGroups, setOpenGroups] = useState<Record<string, boolean>>({
     ingredients: true, operating: true, packaging: true, commission: true, other: true,
   })
+  const [hoveredSlice, setHoveredSlice] = useState<string | null>(null)
 
   function toggleGroup(key: string) {
     setOpenGroups(prev => ({ ...prev, [key]: !prev[key] }))
@@ -772,13 +924,21 @@ export default function PlateProfitForm({ canCost, usageCount }: {
       {results && !firstSuccess && (() => {
         const health = computeHealthScores(results, opCosts)
         const rating = starRating(health.overall)
-        const insights = generateInsights(results, opCosts, health.foodCostOfTotal)
-        const leaks = generateProfitLeaks(results, opCosts, sym)
+        const top = topCostIngredient(results.ingBreakdown)
+        const leaks = generateProfitLeaks(results, opCosts, sym, top)
+        const opportunities = generateOpportunities(results, ingredients, opCosts, sym)
         const recommendation = buildRecommendation(results, dishName)
+        const narrative = consultantNarrative(dishName, results, top, sym)
+        const heroSummary = heroVerdict(results, top)
         const priceTiers = computePriceTiers(results.totalCost)
         const primary = results.platResults[0]
         const primaryMargin = primary?.margin ?? 0
         const foodCostPct = 100 - primaryMargin
+        const potential = profitPotential(primaryMargin, foodCostPct)
+        const risk = riskLevel(primaryMargin, foodCostPct)
+        const verdict = menuVerdict(primaryMargin, foodCostPct)
+        const tip = businessTip(top, foodCostPct)
+        const projection = computeMonthlyProjection(primary?.sell ?? 0, primary?.profit ?? 0)
         const healthColor = health.overall >= 75 ? 'text-green' : health.overall >= 50 ? 'text-yellow' : 'text-orange'
         const healthRing = health.overall >= 75 ? '#7A8B5C' : health.overall >= 50 ? '#F3C766' : '#E96B3C'
 
@@ -789,24 +949,32 @@ export default function PlateProfitForm({ canCost, usageCount }: {
           !['Packaging', 'Delivery partner commission', 'Other'].includes(r.name))
         const groupSum = (items: any[]) => items.reduce((s, r) => s + r.cost, 0)
 
+        // Cost-composition pie (Ingredients / Operating / Packaging / Commission), for hover-to-highlight
+        const pieSlices = [
+          { key: 'ingredients', label: 'Ingredients', value: results.ingCost, color: '#E96B3C' },
+          { key: 'operating',   label: 'Operating',   value: groupSum(operatingItems), color: '#7A8B5C' },
+          { key: 'packaging',   label: 'Packaging',   value: groupSum(packagingItems), color: '#F3C766' },
+          { key: 'commission',  label: 'Commission',  value: groupSum(commissionItems), color: '#9B6A45' },
+        ].filter(s => s.value > 0)
+        const pieTotal = pieSlices.reduce((s, p) => s + p.value, 0) || 1
+
         return (
           <div className="space-y-4 animate-fadeIn">
 
-            {/* ── EXECUTIVE SUMMARY ─────────────────────────── */}
+            {/* ── BUSINESS REVIEW HERO ──────────────────────── */}
             <div className="card p-6">
-              <h3 className="font-serif text-[24px] text-ink mb-4 text-center">{dishName}</h3>
+              <h3 className="font-serif text-[24px] text-ink mb-3 text-center">{dishName}</h3>
 
-              <div className="flex flex-col items-center mb-6">
-                <p className="text-[10px] font-bold uppercase tracking-wide text-muted mb-2">Business Health</p>
-                <div className="relative w-[120px] h-[120px] flex items-center justify-center mb-2">
-                  <svg width="120" height="120" style={{ transform: 'rotate(-90deg)' }}>
-                    <circle cx="60" cy="60" r="52" fill="none" stroke="#E8DDD0" strokeWidth="10" />
-                    <circle cx="60" cy="60" r="52" fill="none" stroke={healthRing} strokeWidth="10"
-                      strokeDasharray={`${(health.overall / 100) * 2 * Math.PI * 52} ${2 * Math.PI * 52}`}
-                      strokeLinecap="round" style={{ transition: 'stroke-dasharray 0.6s ease-out' }} />
+              <div className="flex flex-col items-center mb-5">
+                <div className="relative w-[110px] h-[110px] flex items-center justify-center mb-2">
+                  <svg width="110" height="110" style={{ transform: 'rotate(-90deg)' }}>
+                    <circle cx="55" cy="55" r="47" fill="none" stroke="#E8DDD0" strokeWidth="9" />
+                    <circle cx="55" cy="55" r="47" fill="none" stroke={healthRing} strokeWidth="9"
+                      strokeDasharray={`${(health.overall / 100) * 2 * Math.PI * 47} ${2 * Math.PI * 47}`}
+                      strokeLinecap="round" style={{ transition: 'stroke-dasharray 0.8s ease-out' }} />
                   </svg>
                   <div className="absolute flex flex-col items-center">
-                    <span className={`font-serif text-[30px] leading-none ${healthColor}`}>{health.overall}</span>
+                    <AnimatedNumber value={health.overall} className={`font-serif text-[28px] leading-none ${healthColor}`} />
                     <span className="text-[10px] text-muted">/ 100</span>
                   </div>
                 </div>
@@ -815,23 +983,46 @@ export default function PlateProfitForm({ canCost, usageCount }: {
                 </p>
               </div>
 
-              <div className="grid grid-cols-2 gap-3">
-                <div className="bg-cream rounded-[10px] p-3.5 text-center">
-                  <p className="text-[10px] text-muted uppercase tracking-wide mb-1">Food Cost</p>
-                  <p className={`font-serif text-[22px] ${foodCostPct <= 35 ? 'text-green' : 'text-orange'}`}>{foodCostPct}%</p>
-                </div>
-                <div className="bg-cream rounded-[10px] p-3.5 text-center">
-                  <p className="text-[10px] text-muted uppercase tracking-wide mb-1">Margin</p>
-                  <p className={`font-serif text-[22px] ${primaryMargin >= 25 ? 'text-green' : 'text-orange'}`}>{primaryMargin}%</p>
-                </div>
-                <div className="bg-cream rounded-[10px] p-3.5 text-center">
-                  <p className="text-[10px] text-muted uppercase tracking-wide mb-1">Total Cost</p>
-                  <p className="font-serif text-[22px] text-ink">{sym} {results.totalCost.toLocaleString()}</p>
-                </div>
-                <div className="bg-cream rounded-[10px] p-3.5 text-center">
-                  <p className="text-[10px] text-muted uppercase tracking-wide mb-1">Selling Price</p>
-                  <p className="font-serif text-[22px] text-ink">{sym} {(primary?.sell ?? 0).toLocaleString()}</p>
-                </div>
+              <p className="text-[13px] text-ink leading-relaxed text-center max-w-[480px] mx-auto">
+                {heroSummary}
+              </p>
+            </div>
+
+            {/* ── EXECUTIVE CARDS ───────────────────────────── */}
+            <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
+              <div className="card p-4 text-center">
+                <p className="text-[10px] text-muted uppercase tracking-wide mb-1">Food Cost</p>
+                <p className={`font-serif text-[20px] ${foodCostPct <= 35 ? 'text-green' : 'text-orange'}`}>{foodCostPct}%</p>
+                <p className={`text-[10px] font-semibold mt-0.5 ${foodCostPct <= 35 ? 'text-green' : 'text-orange'}`}>
+                  {foodCostPct <= 35 ? '🟢 Excellent' : foodCostPct <= 45 ? '🟠 Slightly high' : '🔴 High'}
+                </p>
+              </div>
+              <div className="card p-4 text-center">
+                <p className="text-[10px] text-muted uppercase tracking-wide mb-1">Margin</p>
+                <p className={`font-serif text-[20px] ${primaryMargin >= 25 ? 'text-green' : 'text-orange'}`}>{primaryMargin}%</p>
+                <p className={`text-[10px] font-semibold mt-0.5 ${primaryMargin >= 25 ? 'text-green' : 'text-orange'}`}>
+                  {primaryMargin >= 25 ? '🟢 Excellent' : primaryMargin >= 15 ? '🟠 Workable' : '🔴 Thin'}
+                </p>
+              </div>
+              <div className="card p-4 text-center">
+                <p className="text-[10px] text-muted uppercase tracking-wide mb-1">Estimated Profit</p>
+                <p className="font-serif text-[20px] text-ink">{sym} {(primary?.profit ?? 0).toLocaleString()}</p>
+                <p className="text-[10px] text-muted mt-0.5">per {results.srv > 1 ? 'serving' : 'dish'}</p>
+              </div>
+              <div className="card p-4 text-center">
+                <p className="text-[10px] text-muted uppercase tracking-wide mb-1">Business Rating</p>
+                <p className="font-serif text-[20px] text-ink">{health.overall}/100</p>
+                <p className="text-[10px] text-orange mt-0.5">{'★'.repeat(rating.stars)}{'☆'.repeat(5 - rating.stars)}</p>
+              </div>
+              <div className="card p-4 text-center">
+                <p className="text-[10px] text-muted uppercase tracking-wide mb-1">Profit Potential</p>
+                <p className="font-serif text-[18px] text-ink">{potential.label}</p>
+                <p className="text-[10px] text-muted mt-0.5">{potential.caption}</p>
+              </div>
+              <div className="card p-4 text-center">
+                <p className="text-[10px] text-muted uppercase tracking-wide mb-1">Risk Level</p>
+                <p className="font-serif text-[18px] text-ink">{risk.label}</p>
+                <p className="text-[10px] text-muted mt-0.5">{risk.caption}</p>
               </div>
             </div>
 
@@ -857,44 +1048,40 @@ export default function PlateProfitForm({ canCost, usageCount }: {
               </div>
             </div>
 
-            {/* ── AI INSIGHTS ────────────────────────────────── */}
-            {insights.length > 0 && (
-              <div className="card p-5">
-                <p className="text-[10px] font-bold uppercase tracking-wide text-muted mb-3">Insights</p>
-                <div className="space-y-2">
-                  {insights.map((ins, i) => (
-                    <div key={i} className={`flex gap-3 rounded-[10px] p-3.5 ${ins.type === 'good' ? 'bg-green/5' : 'bg-orange/5'}`}>
-                      <span className={`flex-shrink-0 ${ins.type === 'good' ? 'text-green' : 'text-orange'}`}>
-                        {ins.type === 'good' ? '✓' : '⚠'}
-                      </span>
-                      <div>
-                        <p className="text-[12px] font-bold text-ink">{ins.title}</p>
-                        <p className="text-[11px] text-muted leading-relaxed">{ins.desc}</p>
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              </div>
-            )}
+            {/* ── AI RESTAURANT CONSULTANT ──────────────────── */}
+            <div className="card p-6 bg-ink">
+              <p className="text-[10px] font-bold uppercase tracking-wide text-white/40 mb-3">
+                What I would tell you as your restaurant consultant
+              </p>
+              <p className="text-[14px] text-white leading-relaxed">{narrative}</p>
+            </div>
 
             {/* ── MARGIN BY PLATFORM ────────────────────────── */}
             <div className="card p-5">
               <p className="text-[10px] font-bold uppercase tracking-wide text-muted mb-3">Margin by Platform</p>
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                {results.platResults.map((p: any) => (
-                  <div key={p.name} className="border border-border rounded-[10px] p-4 hover:border-green/50 hover:shadow-sm transition-all duration-200">
-                    <p className="text-[13px] font-bold text-ink mb-2">{p.name}</p>
-                    <div className="flex justify-between text-[11px] text-muted mb-1">
-                      <span>Profit</span>
-                      <span className="font-bold text-ink">{sym} {p.profit.toLocaleString()}</span>
+                {results.platResults.map((p: any) => {
+                  const tag = platformTag(p, results.platResults)
+                  const badgeClass = tag.tone === 'good' ? 'bg-green/15 text-green'
+                    : tag.tone === 'warn' ? 'bg-orange/15 text-orange'
+                    : 'bg-cream text-muted'
+                  return (
+                    <div key={p.name} className="border border-border rounded-[10px] p-4 hover:border-green/50 hover:shadow-sm transition-all duration-200">
+                      <div className="flex items-center justify-between mb-2">
+                        <p className="text-[13px] font-bold text-ink">{p.name}</p>
+                        <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full ${badgeClass}`}>{tag.label}</span>
+                      </div>
+                      <div className="flex justify-between text-[11px] text-muted mb-1">
+                        <span>Profit</span>
+                        <span className="font-bold text-ink">{sym} {p.profit.toLocaleString()}</span>
+                      </div>
+                      <div className="flex justify-between text-[11px] text-muted">
+                        <span>Margin</span>
+                        <span className={`font-bold ${p.margin >= 25 ? 'text-green' : 'text-orange'}`}>{p.margin}%</span>
+                      </div>
                     </div>
-                    <div className="flex justify-between text-[11px] text-muted mb-2">
-                      <span>Margin</span>
-                      <span className={`font-bold ${p.margin >= 25 ? 'text-green' : 'text-orange'}`}>{p.margin}%</span>
-                    </div>
-                    <p className="text-[11px] text-muted italic">{platformTag(p, results.platResults)}</p>
-                  </div>
-                ))}
+                  )
+                })}
               </div>
             </div>
 
@@ -929,12 +1116,36 @@ export default function PlateProfitForm({ canCost, usageCount }: {
                 <p className="text-[10px] font-bold uppercase tracking-wide text-muted mb-3">Biggest Profit Leaks</p>
                 <div className="space-y-2">
                   {leaks.map((leak, i) => (
-                    <div key={i} className="border border-orange/20 bg-orange/5 rounded-[10px] p-3.5">
-                      <div className="flex items-start justify-between gap-3 mb-1">
-                        <p className="text-[12px] font-bold text-ink">{leak.title}</p>
-                        <span className="text-[11px] font-bold text-orange flex-shrink-0">{leak.impact}</span>
+                    <div key={i} className={`flex gap-3 rounded-[10px] p-3.5 ${leak.icon === '💡' ? 'bg-green/5' : 'bg-orange/5'}`}>
+                      <span className="flex-shrink-0 text-[15px]">{leak.icon}</span>
+                      <div className="flex-1 min-w-0">
+                        <div className="flex items-start justify-between gap-3 mb-1">
+                          <p className="text-[12px] font-bold text-ink">{leak.title}</p>
+                          <span className="text-[11px] font-bold text-orange flex-shrink-0">{leak.impact}</span>
+                        </div>
+                        <p className="text-[11px] text-muted leading-relaxed">{leak.desc}</p>
                       </div>
-                      <p className="text-[11px] text-muted leading-relaxed">{leak.desc}</p>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+
+            {/* ── SMART OPPORTUNITIES ───────────────────────── */}
+            {opportunities.length > 0 && (
+              <div className="card p-5">
+                <p className="text-[10px] font-bold uppercase tracking-wide text-muted mb-3">Opportunities</p>
+                <p className="text-[10px] text-muted mb-3">
+                  Impact estimates assume ~{REFERENCE_DAILY_VOLUME} portions/day — adjust for your own volume.
+                </p>
+                <div className="space-y-2">
+                  {opportunities.map((op, i) => (
+                    <div key={i} className="border border-green/20 bg-green/5 rounded-[10px] p-3.5">
+                      <div className="flex items-start justify-between gap-3 mb-1">
+                        <p className="text-[12px] font-bold text-ink">{op.title}</p>
+                        <span className="text-[11px] font-bold text-green flex-shrink-0">{op.impact}</span>
+                      </div>
+                      <p className="text-[11px] text-muted leading-relaxed">{op.desc}</p>
                     </div>
                   ))}
                 </div>
@@ -949,15 +1160,91 @@ export default function PlateProfitForm({ canCost, usageCount }: {
               </div>
             )}
 
+            {/* ── MONTHLY PROFIT PROJECTION ─────────────────── */}
+            {(primary?.sell ?? 0) > 0 && (
+              <div className="card p-5">
+                <p className="text-[10px] font-bold uppercase tracking-wide text-muted mb-1">Monthly Profit Projection</p>
+                <p className="text-[10px] text-muted mb-3">If you sold this many portions a day, on {primary?.name}:</p>
+                <div className="grid grid-cols-2 sm:grid-cols-4 gap-2.5">
+                  {projection.map(row => (
+                    <div key={row.volume} className="border border-border rounded-[10px] p-3 text-center">
+                      <p className="text-[11px] font-bold text-ink mb-2">{row.volume}/day</p>
+                      <p className="text-[9px] text-muted uppercase tracking-wide">Revenue</p>
+                      <p className="text-[13px] font-semibold text-ink mb-1.5">{sym} {row.monthlyRevenue.toLocaleString()}</p>
+                      <p className="text-[9px] text-muted uppercase tracking-wide">Profit</p>
+                      <p className="text-[13px] font-semibold text-green mb-1.5">{sym} {row.monthlyProfit.toLocaleString()}</p>
+                      <p className="text-[9px] text-muted uppercase tracking-wide">Annual</p>
+                      <p className="text-[12px] font-semibold text-orange">{sym} {row.annualProfit.toLocaleString()}</p>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+
+            {/* ── MENU RECOMMENDATION ───────────────────────── */}
+            <div className="card p-5 text-center">
+              <p className="text-[10px] font-bold uppercase tracking-wide text-muted mb-2">Should this stay on your menu?</p>
+              <p className="text-[18px] font-bold text-ink mb-1">{verdict.icon} {verdict.label}</p>
+              <p className="text-[12px] text-muted max-w-[400px] mx-auto leading-relaxed">{verdict.desc}</p>
+            </div>
+
+            {/* ── BUSINESS TIPS ──────────────────────────────── */}
+            <div className="card p-5 bg-cream border-none">
+              <p className="text-[10px] font-bold uppercase tracking-wide text-muted mb-2">Business Tip</p>
+              <p className="text-[13px] text-ink leading-relaxed">{tip}</p>
+            </div>
+
             {/* ── COST BREAKDOWN (collapsible groups) ───────── */}
             <div className="card p-5">
               <p className="text-[10px] font-bold uppercase tracking-wide text-muted mb-3">Cost Breakdown</p>
+
+              {pieSlices.length > 1 && (
+                <div className="flex flex-col sm:flex-row items-center gap-5 mb-4 pb-4 border-b border-border">
+                  <svg width="110" height="110" style={{ transform: 'rotate(-90deg)', flexShrink: 0 }}>
+                    {(() => {
+                      let offset = 0
+                      const circ = 2 * Math.PI * 47
+                      return pieSlices.map(slice => {
+                        const frac = slice.value / pieTotal
+                        const arc = frac * circ
+                        const el = (
+                          <circle key={slice.key} cx="55" cy="55" r="47" fill="none"
+                            stroke={slice.color}
+                            strokeWidth={hoveredSlice === slice.key ? 14 : 10}
+                            strokeDasharray={`${arc} ${circ}`}
+                            strokeDashoffset={-offset}
+                            style={{ transition: 'stroke-width 0.2s ease-out', cursor: 'pointer' }}
+                            onMouseEnter={() => setHoveredSlice(slice.key)}
+                            onMouseLeave={() => setHoveredSlice(null)}
+                          />
+                        )
+                        offset += arc
+                        return el
+                      })
+                    })()}
+                  </svg>
+                  <div className="flex flex-col gap-1.5">
+                    {pieSlices.map(slice => (
+                      <div key={slice.key}
+                        className={`flex items-center gap-2 text-[11px] rounded-[6px] px-1.5 py-1 transition-colors cursor-pointer
+                          ${hoveredSlice === slice.key ? 'bg-cream' : ''}`}
+                        onMouseEnter={() => setHoveredSlice(slice.key)}
+                        onMouseLeave={() => setHoveredSlice(null)}>
+                        <span className="w-2.5 h-2.5 rounded-full flex-shrink-0" style={{ background: slice.color }} />
+                        <span className="text-muted">{slice.label}</span>
+                        <span className="font-bold text-ink">{Math.round((slice.value / pieTotal) * 100)}%</span>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+
               <div className="space-y-2">
 
                 {/* Ingredients */}
                 <div className="border border-border rounded-[10px] overflow-hidden">
                   <button onClick={() => toggleGroup('ingredients')}
-                    className="w-full flex items-center justify-between px-4 py-3 hover:bg-cream transition-colors">
+                    className={`w-full flex items-center justify-between px-4 py-3 hover:bg-cream transition-colors ${hoveredSlice === 'ingredients' ? 'bg-orange/10' : ''}`}>
                     <span className="text-[12px] font-bold text-ink">Ingredients</span>
                     <div className="flex items-center gap-2">
                       <span className="text-[12px] font-bold text-orange">{sym} {results.ingCost.toLocaleString()}</span>
@@ -980,7 +1267,7 @@ export default function PlateProfitForm({ canCost, usageCount }: {
                 {operatingItems.length > 0 && (
                   <div className="border border-border rounded-[10px] overflow-hidden">
                     <button onClick={() => toggleGroup('operating')}
-                      className="w-full flex items-center justify-between px-4 py-3 hover:bg-cream transition-colors">
+                      className={`w-full flex items-center justify-between px-4 py-3 hover:bg-cream transition-colors ${hoveredSlice === 'operating' ? 'bg-green/10' : ''}`}>
                       <span className="text-[12px] font-bold text-ink">Operating Costs</span>
                       <div className="flex items-center gap-2">
                         <span className="text-[12px] font-bold text-orange">{sym} {groupSum(operatingItems).toLocaleString()}</span>
@@ -1004,7 +1291,7 @@ export default function PlateProfitForm({ canCost, usageCount }: {
                 {packagingItems.length > 0 && (
                   <div className="border border-border rounded-[10px] overflow-hidden">
                     <button onClick={() => toggleGroup('packaging')}
-                      className="w-full flex items-center justify-between px-4 py-3 hover:bg-cream transition-colors">
+                      className={`w-full flex items-center justify-between px-4 py-3 hover:bg-cream transition-colors ${hoveredSlice === 'packaging' ? 'bg-yellow/10' : ''}`}>
                       <span className="text-[12px] font-bold text-ink">Packaging</span>
                       <div className="flex items-center gap-2">
                         <span className="text-[12px] font-bold text-orange">{sym} {groupSum(packagingItems).toLocaleString()}</span>
@@ -1028,7 +1315,7 @@ export default function PlateProfitForm({ canCost, usageCount }: {
                 {commissionItems.length > 0 && (
                   <div className="border border-border rounded-[10px] overflow-hidden">
                     <button onClick={() => toggleGroup('commission')}
-                      className="w-full flex items-center justify-between px-4 py-3 hover:bg-cream transition-colors">
+                      className={`w-full flex items-center justify-between px-4 py-3 hover:bg-cream transition-colors ${hoveredSlice === 'commission' ? 'bg-brown/10' : ''}`}>
                       <span className="text-[12px] font-bold text-ink">Commission</span>
                       <div className="flex items-center gap-2">
                         <span className="text-[12px] font-bold text-orange">{sym} {groupSum(commissionItems).toLocaleString()}</span>
