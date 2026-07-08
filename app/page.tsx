@@ -143,81 +143,101 @@ export default async function HomePage() {
         </div>
       </section>
 
-      {/* ── CREATE · PRICE · RUN ─────────────────────────────── */}
+      {/* ── FOUR PILLARS ─────────────────────────────────────── */}
       <section className="bg-light py-16" id="create-price-run">
-        <div className="max-w-[1000px] mx-auto px-6">
+        <div className="max-w-[1100px] mx-auto px-6">
           <div className="text-center mb-10">
             <div className="eyebrow justify-center mb-3">The system</div>
             <h2 className="font-serif text-[clamp(28px,4vw,42px)] text-ink">
-              Create · Price · Run
+              The Four Pillars of Salt Theory
             </h2>
-            <p className="text-[15px] text-muted mt-3 max-w-[500px] mx-auto leading-relaxed">
-              From your first recipe to a fully documented operation.
+            <p className="text-[15px] text-muted mt-3 max-w-[560px] mx-auto leading-relaxed">
+              Everything you need to build a profitable food business—from creating recipes to running a business powered by systems.
             </p>
           </div>
 
-          <div className="grid md:grid-cols-3 gap-5">
+          <div className="flex flex-col lg:flex-row items-stretch gap-0">
+
             {/* Create */}
             <Link href="/recipe-gennie"
-              className="card p-6 border-t-4 border-t-orange block transition-all duration-200 hover:-translate-y-0.5 hover:shadow-md">
+              className="flex-1 card p-6 border-t-4 border-t-orange relative flex flex-col transition-all duration-200 hover:-translate-y-0.5 hover:shadow-md">
+              <div className="absolute top-3 right-3 text-[9px] font-bold uppercase tracking-wide bg-green/15 text-green px-2 py-0.5 rounded-full">
+                Available ✅
+              </div>
               <div className="eyebrow mb-3">Create</div>
               <h3 className="font-serif text-[22px] text-ink mb-2">Recipe Studio</h3>
               <p className="text-[14px] text-muted leading-relaxed mb-4">
-                Create consistent recipes for any cuisine. Scale recipes for any number of guests.
+                Create consistent recipes that can be repeated across every kitchen, every shift and every team.
               </p>
-              <p className="text-[12px] font-semibold text-green mb-4">Free — 5 recipes/month</p>
-              <span className="btn-secondary block text-center py-2.5 text-[13px]">
-                Create Recipe
+              <span className="btn-secondary block text-center py-2.5 text-[13px] mt-auto">
+                Open Recipe Studio
               </span>
             </Link>
 
-            {/* Price — flagship, slightly elevated */}
+            {/* Arrow */}
+            <div className="flex items-center justify-center py-2 lg:py-0 lg:px-1">
+              <span className="text-muted/25 text-[20px] lg:hidden">↓</span>
+              <span className="text-muted/25 text-[18px] hidden lg:block">→</span>
+            </div>
+
+            {/* Price — flagship */}
             <Link href="/plate-profit"
-              className="card p-6 border-t-4 border-t-green relative block border-2 border-green/20
+              className="flex-1 card p-6 border-t-4 border-t-green relative flex flex-col border-2 border-green/20
                          transition-all duration-200 hover:-translate-y-0.5 md:shadow-md hover:shadow-lg z-10">
-              <div className="absolute top-3 right-3 text-[10px] font-bold bg-green/15 text-green px-2 py-0.5 rounded-full">
+              <div className="absolute top-3 right-3 text-[9px] font-bold uppercase tracking-wide bg-green/15 text-green px-2 py-0.5 rounded-full">
                 Start Here
               </div>
               <div className="eyebrow green mb-3">Price</div>
               <h3 className="font-serif text-[22px] text-ink mb-2">Plate Profit</h3>
               <p className="text-[14px] text-muted leading-relaxed mb-4">
-                Know exactly what every dish costs.
+                Know exactly what every dish costs, how much profit it makes and what you should charge.
               </p>
-              <ul className="space-y-1.5 text-[13px] text-muted mb-4">
-                <li className="flex gap-2"><span className="text-green">✦</span>Food cost</li>
-                <li className="flex gap-2"><span className="text-green">✦</span>Packaging</li>
-                <li className="flex gap-2"><span className="text-green">✦</span>Labour</li>
-                <li className="flex gap-2"><span className="text-green">✦</span>Delivery commissions</li>
-                <li className="flex gap-2"><span className="text-green">✦</span>Profit margin</li>
-              </ul>
-              <p className="text-[12px] font-semibold text-green mb-4">Free — 3 dish costings</p>
-              <span className="btn-primary block text-center py-2.5 text-[13px]">
-                Cost My Dish
+              <span className="btn-primary block text-center py-2.5 text-[13px] mt-auto">
+                Open Plate Profit
               </span>
             </Link>
 
+            {/* Arrow */}
+            <div className="flex items-center justify-center py-2 lg:py-0 lg:px-1">
+              <span className="text-muted/25 text-[20px] lg:hidden">↓</span>
+              <span className="text-muted/25 text-[18px] hidden lg:block">→</span>
+            </div>
+
+            {/* Analyze — coming next, no link */}
+            <div className="flex-1 card p-6 border-t-4 border-t-yellow relative flex flex-col">
+              <div className="absolute top-3 right-3 text-[9px] font-bold uppercase tracking-wide bg-yellow/20 text-brown px-2 py-0.5 rounded-full">
+                Next Release 🚀
+              </div>
+              <div className="eyebrow" style={{color:'#9B6A45'}}>Analyze</div>
+              <h3 className="font-serif text-[22px] text-ink mb-2 mt-3">Menu Intelligence</h3>
+              <p className="text-[14px] text-muted leading-relaxed mb-4">
+                Transform recipes and food costings into business intelligence. Discover your most profitable dishes, identify weak performers and understand the health of your entire menu.
+              </p>
+              <span className="border border-border rounded-full block text-center py-2.5 text-[13px] text-muted mt-auto cursor-default">
+                Coming Soon
+              </span>
+            </div>
+
+            {/* Arrow */}
+            <div className="flex items-center justify-center py-2 lg:py-0 lg:px-1">
+              <span className="text-muted/25 text-[20px] lg:hidden">↓</span>
+              <span className="text-muted/25 text-[18px] hidden lg:block">→</span>
+            </div>
+
             {/* Run */}
             <Link href="#newsletter"
-              className="card p-6 border-t-4 border-t-yellow relative overflow-hidden block
+              className="flex-1 card p-6 border-t-4 border-t-yellow relative flex flex-col overflow-hidden block
                          transition-all duration-200 hover:-translate-y-0.5 hover:shadow-md">
-              <div className="absolute top-3 right-3 text-[10px] font-bold bg-yellow/20 text-brown px-2 py-0.5 rounded-full">
-                Coming soon
+              <div className="absolute top-3 right-3 text-[9px] font-bold uppercase tracking-wide bg-yellow/20 text-brown px-2 py-0.5 rounded-full">
+                In Development ⚙️
               </div>
               <div className="eyebrow" style={{color:'#9B6A45'}}>Run</div>
-              <div className="mb-3"></div>
-              <h3 className="font-serif text-[22px] text-ink mb-2">Business System</h3>
+              <h3 className="font-serif text-[22px] text-ink mb-2 mt-3">Business System</h3>
               <p className="text-[14px] text-muted leading-relaxed mb-4">
-                Coming Soon
+                Standard operating procedures, weekly dashboards, staff training and operational systems that help your business scale consistently.
               </p>
-              <ul className="space-y-1.5 text-[13px] text-muted mb-4">
-                <li className="flex gap-2"><span style={{color:'#9B6A45'}}>✦</span>Weekly Dashboard</li>
-                <li className="flex gap-2"><span style={{color:'#9B6A45'}}>✦</span>Profit Leak Audit</li>
-                <li className="flex gap-2"><span style={{color:'#9B6A45'}}>✦</span>SOP Builder</li>
-                <li className="flex gap-2"><span style={{color:'#9B6A45'}}>✦</span>Training Manuals</li>
-                <li className="flex gap-2"><span style={{color:'#9B6A45'}}>✦</span>Business Blueprint</li>
-              </ul>
-              <span className="btn-secondary block text-center py-2.5 text-[13px]">
-                Join Waitlist
+              <span className="btn-secondary block text-center py-2.5 text-[13px] mt-auto">
+                Coming Soon
               </span>
             </Link>
           </div>
@@ -410,6 +430,9 @@ export default async function HomePage() {
       {/* ── FOOTER ───────────────────────────────────────────── */}
       <footer className="bg-ink py-10">
         <div className="max-w-[1000px] mx-auto px-6">
+          <p className="text-center text-[11px] text-white/25 tracking-wide mb-8">
+            Built on the Four Pillars — Create • Price • Analyze • Run
+          </p>
           <div className="flex flex-wrap justify-between items-start gap-8 mb-8">
             <div className="max-w-[260px]">
               <div className="flex items-center gap-3 mb-3">
