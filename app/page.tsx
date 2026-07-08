@@ -15,22 +15,19 @@ export default async function HomePage() {
       {/* ── HERO ─────────────────────────────────────────────── */}
       <section className="max-w-[1000px] mx-auto px-6 pt-16 pb-20 grid md:grid-cols-2 gap-12 items-center">
         <div>
-          <div className="eyebrow mb-4">Built for food businesses · By someone who gets it</div>
+          <div className="eyebrow mb-4">Built by restaurant operators—not software people.</div>
           <h1 className="font-serif text-[clamp(38px,5.5vw,64px)] text-ink leading-[1.08] mb-5">
-            Your food is ready.<br />
-            <em className="text-orange not-italic">Is your business?</em>
+            Run a More Profitable Food Business.
           </h1>
           <p className="text-[16px] text-muted leading-[1.85] mb-8 max-w-[460px]">
-            Most food businesses run from memory, WhatsApp messages, and recipes in someone's head.
-            When staff leave, the knowledge leaves with them. When orders scale, the chaos scales too.
-            Salt Theory gives you the tools to build a real business — not just a great kitchen.
+            Build recipes, calculate food costs and create systems that help your food business grow—whether you're a home chef, caterer, cloud kitchen or restaurant.
           </p>
           <div className="flex gap-3 flex-wrap">
             <Link href="/auth/signup" className="btn-primary px-8 py-3.5 text-[15px]">
-              Start for free ✦
+              Start Free ✦
             </Link>
-            <Link href="#what-we-offer" className="btn-secondary px-8 py-3.5 text-[15px]">
-              See what's included
+            <Link href="#create-price-run" className="btn-secondary px-8 py-3.5 text-[15px]">
+              Explore Tools
             </Link>
           </div>
           <p className="text-[12px] text-muted mt-4">
@@ -129,13 +126,93 @@ export default async function HomePage() {
       <section className="bg-light py-16">
         <div className="max-w-[720px] mx-auto px-6 text-center">
           <div className="eyebrow justify-center mb-4">The problem we solve</div>
-          <blockquote className="font-serif text-[clamp(20px,3vw,30px)] text-ink leading-[1.5] mb-6">
-            "Your biryani is legendary. But do you know what it costs to make? Does your team know how to make it
-            the same way every time? Is there a process for opening, closing, handling a complaint, training a new chef?"
-          </blockquote>
-          <p className="text-[15px] text-muted leading-relaxed">
-            Most food businesses can't answer these questions. <strong className="text-ink">Salt Theory exists so you can.</strong>
+          <h2 className="font-serif text-[clamp(20px,3vw,30px)] text-ink leading-[1.5] mb-6">
+            Most food businesses don't fail because of the food.
+          </h2>
+          <p className="text-[15px] text-muted leading-[1.9]">
+            Recipes aren't documented.<br />
+            Pricing is based on guesswork.<br />
+            Operations depend on people instead of systems.<br />
+            When staff leave, knowledge leaves.<br />
+            When ingredient prices change, profit disappears.<br />
+            <strong className="text-ink">Salt Theory helps fix that.</strong>
           </p>
+        </div>
+      </section>
+
+      {/* ── CREATE · PRICE · RUN ─────────────────────────────── */}
+      <section className="bg-light py-16" id="create-price-run">
+        <div className="max-w-[1000px] mx-auto px-6">
+          <div className="text-center mb-10">
+            <div className="eyebrow justify-center mb-3">The system</div>
+            <h2 className="font-serif text-[clamp(28px,4vw,42px)] text-ink">
+              Create · Price · Run
+            </h2>
+            <p className="text-[15px] text-muted mt-3 max-w-[500px] mx-auto leading-relaxed">
+              From your first recipe to a fully documented operation.
+            </p>
+          </div>
+
+          <div className="grid md:grid-cols-3 gap-5">
+            {/* Create */}
+            <div className="card p-6 border-t-4 border-t-orange">
+              <div className="eyebrow mb-3">Create</div>
+              <h3 className="font-serif text-[22px] text-ink mb-2">Recipe Studio</h3>
+              <p className="text-[14px] text-muted leading-relaxed mb-4">
+                Create consistent recipes for any cuisine. Scale recipes for any number of guests.
+              </p>
+              <p className="text-[12px] font-semibold text-green mb-4">Free — 5 recipes/month</p>
+              <Link href="/recipe-gennie" className="btn-secondary block text-center py-2.5 text-[13px]">
+                Generate Recipes
+              </Link>
+            </div>
+
+            {/* Price — flagship, slightly elevated */}
+            <div className="card p-6 border-t-4 border-t-green relative md:scale-[1.03] md:shadow-lg z-10">
+              <div className="absolute top-3 right-3 text-[10px] font-bold bg-green/15 text-green px-2 py-0.5 rounded-full">
+                Flagship tool
+              </div>
+              <div className="eyebrow green mb-3">Price</div>
+              <h3 className="font-serif text-[22px] text-ink mb-2">Plate Profit</h3>
+              <p className="text-[14px] text-muted leading-relaxed mb-4">
+                Know exactly what every dish costs.
+              </p>
+              <ul className="space-y-1.5 text-[13px] text-muted mb-4">
+                <li className="flex gap-2"><span className="text-green">✦</span>Food cost</li>
+                <li className="flex gap-2"><span className="text-green">✦</span>Packaging</li>
+                <li className="flex gap-2"><span className="text-green">✦</span>Labour</li>
+                <li className="flex gap-2"><span className="text-green">✦</span>Delivery commissions</li>
+                <li className="flex gap-2"><span className="text-green">✦</span>Profit margin</li>
+              </ul>
+              <p className="text-[12px] font-semibold text-green mb-4">Free — 3 dish costings</p>
+              <Link href="/plate-profit" className="btn-primary block text-center py-2.5 text-[13px]">
+                Cost a Dish
+              </Link>
+            </div>
+
+            {/* Run */}
+            <div className="card p-6 border-t-4 border-t-yellow relative overflow-hidden">
+              <div className="absolute top-3 right-3 text-[10px] font-bold bg-yellow/20 text-brown px-2 py-0.5 rounded-full">
+                Coming soon
+              </div>
+              <div className="eyebrow" style={{color:'#9B6A45'}}>Run</div>
+              <div className="mb-3"></div>
+              <h3 className="font-serif text-[22px] text-ink mb-2">Business System</h3>
+              <p className="text-[14px] text-muted leading-relaxed mb-4">
+                Coming Soon
+              </p>
+              <ul className="space-y-1.5 text-[13px] text-muted mb-4">
+                <li className="flex gap-2"><span style={{color:'#9B6A45'}}>✦</span>Weekly Dashboard</li>
+                <li className="flex gap-2"><span style={{color:'#9B6A45'}}>✦</span>Profit Leak Audit</li>
+                <li className="flex gap-2"><span style={{color:'#9B6A45'}}>✦</span>SOP Builder</li>
+                <li className="flex gap-2"><span style={{color:'#9B6A45'}}>✦</span>Training Manuals</li>
+                <li className="flex gap-2"><span style={{color:'#9B6A45'}}>✦</span>Business Blueprint</li>
+              </ul>
+              <Link href="#newsletter" className="btn-secondary block text-center py-2.5 text-[13px]">
+                Join Waitlist
+              </Link>
+            </div>
+          </div>
         </div>
       </section>
 
@@ -161,68 +238,32 @@ export default async function HomePage() {
         </div>
       </section>
 
-      {/* ── WHAT WE OFFER ────────────────────────────────────── */}
-      <section className="bg-light py-16" id="what-we-offer">
+      {/* ── BUILT FROM REAL EXPERIENCE ───────────────────────── */}
+      <section className="bg-light py-16">
         <div className="max-w-[1000px] mx-auto px-6">
           <div className="text-center mb-10">
-            <div className="eyebrow justify-center mb-3">What Salt Theory gives you</div>
+            <div className="eyebrow justify-center mb-3">Why it's different</div>
             <h2 className="font-serif text-[clamp(28px,4vw,42px)] text-ink">
-              A complete system — not just tools
+              Built From Real Food Businesses.
             </h2>
-            <p className="text-[15px] text-muted mt-3 max-w-[500px] mx-auto leading-relaxed">
-              From creating your first recipe to running a professional operation with trained staff and documented processes.
+            <p className="text-[15px] text-muted mt-3 max-w-[520px] mx-auto leading-relaxed">
+              Salt Theory wasn't created in a boardroom. It was built from years of recipe development,
+              menu costing, restaurant operations and consulting work. Every feature solves a real
+              operational problem.
             </p>
           </div>
-
-          <div className="grid md:grid-cols-3 gap-5">
-            {/* Create */}
-            <div className="card p-6 border-t-4 border-t-orange">
-              <div className="eyebrow mb-3">Create</div>
-              <h3 className="font-serif text-[22px] text-ink mb-2">Recipe Gennie</h3>
-              <p className="text-[14px] text-muted leading-relaxed mb-4">
-                Generate any recipe for any cuisine — South Asian, Western, Asian fusion — scaled to any number of guests. Consistent every single time.
-              </p>
-              <ul className="space-y-1.5 text-[13px] text-muted">
-                <li className="flex gap-2"><span className="text-orange">✦</span>Any cuisine, any occasion</li>
-                <li className="flex gap-2"><span className="text-orange">✦</span>Scale from 2 to 200 guests</li>
-                <li className="flex gap-2"><span className="text-orange">✦</span>Dietary filters built in</li>
-              </ul>
-              <p className="text-[12px] font-semibold text-green mt-4">Free — 5 recipes/month</p>
-            </div>
-
-            {/* Price */}
-            <div className="card p-6 border-t-4 border-t-green">
-              <div className="eyebrow green mb-3">Price</div>
-              <h3 className="font-serif text-[22px] text-ink mb-2">Plate Profit</h3>
-              <p className="text-[14px] text-muted leading-relaxed mb-4">
-                Know exactly what every dish costs — ingredients, spices, wastage, packaging, operating costs, delivery commission. Know your margin before you take a single order.
-              </p>
-              <ul className="space-y-1.5 text-[13px] text-muted">
-                <li className="flex gap-2"><span className="text-green">✦</span>Ingredient-level costing</li>
-                <li className="flex gap-2"><span className="text-green">✦</span>Wastage & operating costs</li>
-                <li className="flex gap-2"><span className="text-green">✦</span>Multi-platform margins</li>
-              </ul>
-              <p className="text-[12px] font-semibold text-green mt-4">Free — 3 dish costings</p>
-            </div>
-
-            {/* Run */}
-            <div className="card p-6 border-t-4 border-t-yellow relative overflow-hidden">
-              <div className="absolute top-3 right-3 text-[10px] font-bold bg-yellow/20 text-brown px-2 py-0.5 rounded-full">
-                Coming soon
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+            {[
+              { value: '[XX]+', label: 'Recipes Developed' },
+              { value: '[XX]+', label: 'Menu Items Costed' },
+              { value: '[XX]+', label: 'Years of Restaurant Experience' },
+              { value: '[XX]+', label: 'Restaurants Supported' },
+            ].map(stat => (
+              <div key={stat.label} className="card p-5 text-center">
+                <p className="font-serif text-[30px] text-orange leading-none mb-2">{stat.value}</p>
+                <p className="text-[12px] text-muted leading-relaxed">{stat.label}</p>
               </div>
-              <div className="eyebrow" style={{color:'#9B6A45'}}>Run</div>
-              <div className="mb-3"></div>
-              <h3 className="font-serif text-[22px] text-ink mb-2">Business System</h3>
-              <p className="text-[14px] text-muted leading-relaxed mb-4">
-                The documents that turn a good kitchen into a professional operation. SOPs, business blueprints, training manuals, hiring policies — built around your specific business.
-              </p>
-              <ul className="space-y-1.5 text-[13px] text-muted">
-                <li className="flex gap-2"><span style={{color:'#9B6A45'}}>✦</span>Kitchen & front office SOPs</li>
-                <li className="flex gap-2"><span style={{color:'#9B6A45'}}>✦</span>Staff training manuals</li>
-                <li className="flex gap-2"><span style={{color:'#9B6A45'}}>✦</span>Business blueprint</li>
-              </ul>
-              <p className="text-[12px] font-semibold mt-4" style={{color:'#9B6A45'}}>Downloads from PKR 1,499</p>
-            </div>
+            ))}
           </div>
         </div>
       </section>
@@ -287,7 +328,7 @@ export default async function HomePage() {
       </section>
 
       {/* ── NEWSLETTER ───────────────────────────────────────── */}
-      <section className="bg-green py-14">
+      <section className="bg-green py-14" id="newsletter">
         <div className="max-w-[700px] mx-auto px-6">
           <div className="grid md:grid-cols-2 gap-8 items-center">
             <div>
