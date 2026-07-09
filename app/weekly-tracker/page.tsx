@@ -5,11 +5,11 @@ import toast from 'react-hot-toast'
 const TRACKER_URL = '/salt-theory-weekly-tracker.pdf'
 
 const CONTENTS = [
-  'Weekly Performance Dashboard — 8 core metrics with target vs. actual',
-  'Daily Sales Tracker — Monday through Sunday, at a glance',
-  'Weekly Review — biggest win, biggest challenge',
-  'Action Plan — five changes to make next week',
-  "Manager's Weekly Checklist — before you start a new week",
+  'Weekly Performance Dashboard - 8 core metrics with target vs. actual',
+  'Daily Sales Tracker - Monday through Sunday, at a glance',
+  'Weekly Review - biggest win, biggest challenge',
+  'Action Plan - five changes to make next week',
+  "Manager's Weekly Checklist - before you start a new week",
 ]
 
 export default function WeeklyTrackerPage() {
@@ -29,9 +29,9 @@ export default function WeeklyTrackerPage() {
       })
       if (!res.ok) throw new Error()
       setUnlocked(true)
-      toast.success("You're in — download below.")
+      toast.success("You're in - download below.")
     } catch {
-      toast.error('Something went wrong — try again')
+      toast.error('Something went wrong - try again')
     } finally {
       setLoading(false)
     }
@@ -46,8 +46,8 @@ export default function WeeklyTrackerPage() {
           The Weekly Performance Tracker
         </h1>
         <p className="text-[16px] text-muted leading-relaxed mb-10 max-w-[460px]">
-          A printable, one-page-a-week system for the numbers every restaurant, café,
-          or cloud kitchen owner should check — sales, food cost, labour cost, prime
+          A printable, one-page-a-week system for the numbers every restaurant, cafe,
+          or cloud kitchen owner should check - sales, food cost, labour cost, prime
           cost, waste, and profit.
         </p>
 
@@ -80,7 +80,7 @@ export default function WeeklyTrackerPage() {
                 className="input flex-1 min-w-[200px]"
               />
               <button type="submit" disabled={loading} className="btn-primary whitespace-nowrap">
-                {loading ? 'Sending…' : 'Get the tracker →'}
+                {loading ? 'Sending...' : 'Get the tracker ->'}
               </button>
             </div>
             <p className="text-[11px] text-muted mt-3">
@@ -90,18 +90,12 @@ export default function WeeklyTrackerPage() {
         ) : (
           <div className="card p-6 text-center">
             <div className="w-12 h-12 bg-green/10 rounded-full flex items-center justify-center mx-auto mb-4">
-              <span className="text-green text-xl">✓</span>
+              <span className="text-green text-xl">OK</span>
             </div>
             <p className="text-[15px] font-semibold text-ink mb-4">
-              You're on the list — here's your tracker.
+              You're on the list - here's your tracker.
             </p>
-            
-              href={TRACKER_URL}
-              download
-              className="btn-primary inline-flex"
-            >
-              Download the PDF ↓
-            </a>
+            <a href={TRACKER_URL} download className="btn-primary inline-flex">Download the PDF v</a>
           </div>
         )}
 
