@@ -56,7 +56,9 @@ export default function TopNav() {
   }
 
   const initial = user?.email?.[0]?.toUpperCase() ?? 'U'
-  const toolHref = (tool: string) => user ? `/${tool}` : '/auth/signup'
+  // PR7: Recipe Studio and Plate Profit allow one free anonymous use —
+  // no need to gate these behind signup anymore.
+  const toolHref = (tool: string) => `/${tool}`
 
   return (
     <>

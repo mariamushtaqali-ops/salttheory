@@ -100,7 +100,7 @@ export default function AdminPage() {
   )
 
   const TABS: { id: Tab; label: string; count?: number }[] = [
-    { id: 'posts',       label: 'Blog posts',  count: posts.length },
+    { id: 'posts',       label: 'Journal posts',  count: posts.length },
     { id: 'new-post',    label: '+ New post' },
     { id: 'users',       label: 'Users',       count: users.length },
     { id: 'subscribers', label: 'Subscribers', count: subscribers.length },
@@ -139,14 +139,14 @@ export default function AdminPage() {
         {tab === 'posts' && (
           <div>
             <div className="flex justify-between items-center mb-4">
-              <h2 className="font-serif text-[20px]">Blog posts</h2>
+              <h2 className="font-serif text-[20px]">Journal posts</h2>
               <button onClick={() => setTab('new-post')}
                 className="btn-primary px-4 py-2 text-[13px]">+ New post</button>
             </div>
             {posts.length === 0 ? (
               <div className="card border-dashed p-10 text-center">
                 <p className="font-serif text-[18px] mb-2">No posts yet</p>
-                <p className="text-[13px] text-muted mb-4">Write your first blog post — it will be published instantly and sent to your newsletter subscribers.</p>
+                <p className="text-[13px] text-muted mb-4">Write your first journal post — it will be published instantly and sent to your newsletter subscribers.</p>
                 <button onClick={() => setTab('new-post')} className="btn-primary px-5 py-2.5 text-[13px]">Write first post</button>
               </div>
             ) : (
@@ -199,7 +199,7 @@ export default function AdminPage() {
                 </div>
                 <div>
                   <label className="block text-[11px] font-bold uppercase tracking-wide text-muted mb-2">
-                    Excerpt <span className="font-normal normal-case tracking-normal text-muted">(shown on blog index)</span>
+                    Excerpt <span className="font-normal normal-case tracking-normal text-muted">(shown on journal index)</span>
                   </label>
                   <input className="input" type="text"
                     placeholder="A short description of what this post is about"

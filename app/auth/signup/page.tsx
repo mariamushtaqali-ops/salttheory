@@ -67,15 +67,6 @@ export default function SignupPage() {
 
   return (
     <div className="min-h-screen bg-cream flex flex-col">
-      {/* Nav */}
-      <nav className="h-[68px] px-6 flex items-center justify-between border-b border-border bg-light/80">
-        <Logo showName size={40} />
-        <p className="text-[13px] text-muted">
-          Already have an account?{' '}
-          <Link href="/auth/login" className="text-orange font-bold hover:underline">Log in</Link>
-        </p>
-      </nav>
-
       {/* Form */}
       <div className="flex-1 flex items-center justify-center px-4 py-10">
         <div className="card p-8 w-full max-w-[440px] shadow-[0_8px_40px_rgba(36,33,30,0.07)]">

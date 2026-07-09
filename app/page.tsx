@@ -23,7 +23,7 @@ export default async function HomePage() {
             Build recipes, calculate food costs and create systems that help your food business grow—whether you're a home chef, caterer, cloud kitchen or restaurant.
           </p>
           <div className="flex gap-3 flex-wrap">
-            <Link href="/auth/signup" className="btn-primary px-8 py-3.5 text-[15px]">
+            <Link href="/plate-profit" className="btn-primary px-8 py-3.5 text-[15px]">
               Start Free ✦
             </Link>
             <Link href="#create-price-run" className="btn-secondary px-8 py-3.5 text-[15px]">
@@ -447,8 +447,8 @@ export default async function HomePage() {
               <div>
                 <p className="text-white/20 text-[10px] uppercase tracking-wider mb-3">System</p>
                 <div className="space-y-2">
-                  <Link href="/auth/signup" className="block text-white/50 hover:text-white transition-colors">Recipe Studio</Link>
-                  <Link href="/auth/signup" className="block text-white/50 hover:text-white transition-colors">Plate Profit</Link>
+                  <Link href="/recipe-gennie" className="block text-white/50 hover:text-white transition-colors">Recipe Studio</Link>
+                  <Link href="/plate-profit" className="block text-white/50 hover:text-white transition-colors">Plate Profit</Link>
                 </div>
               </div>
               <div>
