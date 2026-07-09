@@ -400,7 +400,7 @@ export default async function HomePage() {
           <p className="text-[14px] text-white/60 leading-relaxed mb-8 max-w-[480px] mx-auto">
             Salt Theory helps food businesses replace guesswork with documented recipes, accurate costing and repeatable systems. Built by someone who has experienced these challenges first-hand.
           </p>
-          <Link href="/auth/signup" className="btn-primary px-8 py-3.5 text-[14px] inline-flex">
+          <Link href="/plate-profit" className="btn-primary px-8 py-3.5 text-[14px] inline-flex">
             Build your system today ✦
           </Link>
         </div>

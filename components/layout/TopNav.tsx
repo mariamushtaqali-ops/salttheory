@@ -177,7 +177,7 @@ export default function TopNav() {
                 className="hidden sm:inline-flex btn-ghost text-[13px] px-4 py-2">
                 Log in
               </Link>
-              <Link href="/auth/signup"
+              <Link href="/plate-profit"
                 className="btn-primary text-[13px] px-4 py-2.5">
                 Start free
               </Link>
@@ -276,7 +276,7 @@ export default function TopNav() {
               {!user ? (
                 <div className="flex gap-2 pt-1">
                   <Link href="/auth/login" className="flex-1 btn-ghost text-center py-2.5 text-[13px]">Log in</Link>
-                  <Link href="/auth/signup" className="flex-1 btn-primary text-center py-2.5 text-[13px]">Start free</Link>
+                  <Link href="/plate-profit" className="flex-1 btn-primary text-center py-2.5 text-[13px]">Start free</Link>
                 </div>
               ) : (
                 <>
