@@ -13,8 +13,11 @@ interface User {
 interface Subscriber {
   email: string; source: string; created_at: string
 }
+interface AssetFile {
+  name: string; size: number; created_at: string; url: string
+}
 
-type Tab = 'posts' | 'new-post' | 'users' | 'subscribers'
+type Tab = 'posts' | 'new-post' | 'users' | 'subscribers' | 'assets'
 
 export default function AdminPage() {
   const router = useRouter()
@@ -23,6 +26,8 @@ export default function AdminPage() {
   const [posts, setPosts] = useState<BlogPost[]>([])
   const [users, setUsers] = useState<User[]>([])
   const [subscribers, setSubscribers] = useState<Subscriber[]>([])
+  const [assets, setAssets] = useState<AssetFile[]>([])
+  const [uploading, setUploading] = useState(false)
   const [loading, setLoading] = useState(true)
 
   // New post form
@@ -31,6 +36,7 @@ export default function AdminPage() {
   const [excerpt, setExcerpt] = useState('')
   const [body, setBody] = useState('')
   const [publishing, setPublishing] = useState(false)
+  const [editingId, setEditingId] = useState<string | null>(null)
 
   useEffect(() => {
     async function load() {
@@ -61,13 +67,13 @@ export default function AdminPage() {
     setPublishing(true)
     try {
       const res = await fetch('/api/blog', {
-        method: 'POST',
+        method: editingId ? 'PATCH' : 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ title, slug, excerpt, body }),
+        body: JSON.stringify(editingId ? { id: editingId, title, slug, excerpt, body } : { title, slug, excerpt, body }),
       })
       if (!res.ok) throw new Error(await res.text())
-      toast.success('Post published and newsletter sent!')
-      setTitle(''); setSlug(''); setExcerpt(''); setBody('')
+      toast.success(editingId ? 'Post updated' : 'Post published and newsletter sent!')
+      setTitle(''); setSlug(''); setExcerpt(''); setBody(''); setEditingId(null)
       // Reload posts
       const { data } = await supabase.from('blog_posts').select('id,title,slug,excerpt,published,created_at').order('created_at', { ascending: false })
       setPosts(data || [])
@@ -77,6 +83,79 @@ export default function AdminPage() {
     } finally {
       setPublishing(false)
     }
+  }
+
+  async function handleEditClick(postId: string) {
+    const { data, error } = await supabase.from('blog_posts').select('id,title,slug,excerpt,body').eq('id', postId).single()
+    if (error || !data) { toast.error('Could not load post'); return }
+    setEditingId(data.id)
+    setTitle(data.title)
+    setSlug(data.slug)
+    setExcerpt(data.excerpt || '')
+    setBody(data.body)
+    setTab('new-post')
+  }
+
+  function handleCancelForm() {
+    setTitle(''); setSlug(''); setExcerpt(''); setBody(''); setEditingId(null)
+    setTab('posts')
+  }
+
+  async function loadAssets() {
+    try {
+      const res = await fetch('/api/admin/assets')
+      const data = await res.json()
+      if (res.ok) setAssets(data.files || [])
+    } catch {
+      toast.error('Could not load assets')
+    }
+  }
+
+  async function handleUploadAsset(e: React.ChangeEvent<HTMLInputElement>) {
+    const file = e.target.files?.[0]
+    if (!file) return
+    setUploading(true)
+    try {
+      const formData = new FormData()
+      formData.append('file', file)
+      const res = await fetch('/api/admin/assets', { method: 'POST', body: formData })
+      const data = await res.json()
+      if (!res.ok) throw new Error(data.error || 'Upload failed')
+      toast.success('Uploaded — link ready to copy')
+      await loadAssets()
+    } catch (err: any) {
+      toast.error(err.message || 'Upload failed')
+    } finally {
+      setUploading(false)
+      e.target.value = ''
+    }
+  }
+
+  function handleCopyLink(url: string) {
+    navigator.clipboard.writeText(url)
+    toast.success('Link copied')
+  }
+
+  async function handleDeleteAsset(name: string) {
+    if (!confirm(`Delete ${name}? This cannot be undone, and any links to it will break.`)) return
+    try {
+      const res = await fetch('/api/admin/assets', {
+        method: 'DELETE',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ name }),
+      })
+      if (!res.ok) throw new Error('Delete failed')
+      toast.success('Deleted')
+      setAssets(prev => prev.filter(a => a.name !== name))
+    } catch {
+      toast.error('Delete failed')
+    }
+  }
+
+  function formatSize(bytes: number) {
+    if (bytes < 1024) return `${bytes} B`
+    if (bytes < 1024 * 1024) return `${(bytes / 1024).toFixed(1)} KB`
+    return `${(bytes / (1024 * 1024)).toFixed(1)} MB`
   }
 
   async function handleUpgrade(userId: string) {
@@ -100,8 +179,9 @@ export default function AdminPage() {
   )
 
   const TABS: { id: Tab; label: string; count?: number }[] = [
-    { id: 'posts',       label: 'Journal posts',  count: posts.length },
+    { id: 'posts',       label: 'Blog posts',  count: posts.length },
     { id: 'new-post',    label: '+ New post' },
+    { id: 'assets',      label: 'Assets',      count: assets.length },
     { id: 'users',       label: 'Users',       count: users.length },
     { id: 'subscribers', label: 'Subscribers', count: subscribers.length },
   ]
@@ -120,7 +200,7 @@ export default function AdminPage() {
       {/* Tabs */}
       <div className="border-b border-border bg-light px-6 flex gap-1">
         {TABS.map(t => (
-          <button key={t.id} onClick={() => setTab(t.id)}
+          <button key={t.id} onClick={() => { setTab(t.id); if (t.id === 'assets') loadAssets() }}
             className={`px-4 py-3 text-[13px] font-medium transition-colors border-b-2 -mb-px
               ${tab === t.id
                 ? 'border-orange text-orange'
@@ -139,14 +219,14 @@ export default function AdminPage() {
         {tab === 'posts' && (
           <div>
             <div className="flex justify-between items-center mb-4">
-              <h2 className="font-serif text-[20px]">Journal posts</h2>
+              <h2 className="font-serif text-[20px]">Blog posts</h2>
               <button onClick={() => setTab('new-post')}
                 className="btn-primary px-4 py-2 text-[13px]">+ New post</button>
             </div>
             {posts.length === 0 ? (
               <div className="card border-dashed p-10 text-center">
                 <p className="font-serif text-[18px] mb-2">No posts yet</p>
-                <p className="text-[13px] text-muted mb-4">Write your first journal post — it will be published instantly and sent to your newsletter subscribers.</p>
+                <p className="text-[13px] text-muted mb-4">Write your first blog post — it will be published instantly and sent to your newsletter subscribers.</p>
                 <button onClick={() => setTab('new-post')} className="btn-primary px-5 py-2.5 text-[13px]">Write first post</button>
               </div>
             ) : (
@@ -164,6 +244,8 @@ export default function AdminPage() {
                       </span>
                       <a href={`/blog/${post.slug}`} target="_blank"
                         className="text-[12px] text-orange hover:underline">View →</a>
+                      <button onClick={() => handleEditClick(post.id)}
+                        className="text-[12px] text-muted hover:text-ink hover:underline">Edit</button>
                     </div>
                   </div>
                 ))}
@@ -175,9 +257,11 @@ export default function AdminPage() {
         {/* NEW POST */}
         {tab === 'new-post' && (
           <div>
-            <h2 className="font-serif text-[20px] mb-4">Write a new post</h2>
+            <h2 className="font-serif text-[20px] mb-4">{editingId ? 'Edit post' : 'Write a new post'}</h2>
             <p className="text-[13px] text-muted mb-5 leading-relaxed">
-              Posts are published instantly and automatically sent to all newsletter subscribers via Beehiiv.
+              {editingId
+                ? 'Saving changes updates the live post. This will not re-send the newsletter.'
+                : 'Posts are published instantly and automatically sent to all newsletter subscribers via Beehiiv.'}
             </p>
             <div className="space-y-3">
               <div className="card p-5 space-y-3">
@@ -199,7 +283,7 @@ export default function AdminPage() {
                 </div>
                 <div>
                   <label className="block text-[11px] font-bold uppercase tracking-wide text-muted mb-2">
-                    Excerpt <span className="font-normal normal-case tracking-normal text-muted">(shown on journal index)</span>
+                    Excerpt <span className="font-normal normal-case tracking-normal text-muted">(shown on blog index)</span>
                   </label>
                   <input className="input" type="text"
                     placeholder="A short description of what this post is about"
@@ -211,8 +295,7 @@ export default function AdminPage() {
                 <label className="block text-[11px] font-bold uppercase tracking-wide text-muted mb-2">
                   Body <span className="font-normal normal-case tracking-normal text-muted">(HTML supported — use &lt;p&gt;, &lt;h2&gt;, &lt;ul&gt;, &lt;strong&gt;)</span>
                 </label>
-                <textarea
-                  className="input font-mono text-[13px] leading-relaxed resize-y"
+                <textarea className="input font-mono text-[13px] leading-relaxed resize-y"
                   rows={16}
                   placeholder={`<p>Start writing your post here...</p>\n\n<h2>Section heading</h2>\n<p>More content...</p>`}
                   value={body} onChange={e => setBody(e.target.value)}
@@ -222,16 +305,20 @@ export default function AdminPage() {
               <div className="flex gap-3">
                 <button onClick={handlePublish} disabled={publishing}
                   className="btn-primary flex-1 py-3.5 text-[14px] disabled:opacity-60">
-                  {publishing ? 'Publishing & sending newsletter…' : '✦ Publish post & send newsletter'}
+                  {publishing
+                    ? (editingId ? 'Saving…' : 'Publishing & sending newsletter…')
+                    : (editingId ? 'Save changes' : '✦ Publish post & send newsletter')}
                 </button>
-                <button onClick={() => setTab('posts')}
+                <button onClick={handleCancelForm}
                   className="border border-border rounded-full px-6 py-3.5 text-[13px] font-semibold text-muted hover:border-ink hover:text-ink transition-colors">
                   Cancel
                 </button>
               </div>
 
               <p className="text-[11px] text-muted text-center">
-                This will publish to /blog/{slug || '...'} and send to all Beehiiv subscribers immediately.
+                {editingId
+                  ? `This will update /blog/${slug || '...'} — no newsletter will be sent.`
+                  : `This will publish to /blog/${slug || '...'} and send to all Beehiiv subscribers immediately.`}
               </p>
             </div>
           </div>
@@ -310,6 +397,56 @@ export default function AdminPage() {
                 </table>
               </div>
             </div>
+          </div>
+        )}
+
+        {/* ASSETS */}
+        {tab === 'assets' && (
+          <div>
+            <div className="flex justify-between items-center mb-4">
+              <div>
+                <h2 className="font-serif text-[20px]">Assets</h2>
+                <p className="text-[13px] text-muted mt-1">
+                  Upload PDFs, images, or any file — get a shareable link for blog posts, social, or WhatsApp.
+                </p>
+              </div>
+              <label className="btn-primary px-4 py-2 text-[13px] cursor-pointer">
+                {uploading ? 'Uploading…' : '+ Upload file'}
+                <input type="file" className="hidden" onChange={handleUploadAsset} disabled={uploading} />
+              </label>
+            </div>
+
+            {assets.length === 0 ? (
+              <div className="card border-dashed p-10 text-center">
+                <p className="font-serif text-[18px] mb-2">No assets yet</p>
+                <p className="text-[13px] text-muted mb-4">Upload your first file — a lead magnet PDF, an image, anything you want a public link for.</p>
+                <label className="btn-primary px-5 py-2.5 text-[13px] cursor-pointer inline-block">
+                  Upload a file
+                  <input type="file" className="hidden" onChange={handleUploadAsset} disabled={uploading} />
+                </label>
+              </div>
+            ) : (
+              <div className="space-y-2">
+                {assets.map(a => (
+                  <div key={a.name} className="card p-4 flex items-center justify-between gap-4">
+                    <div className="flex-1 min-w-0">
+                      <p className="text-[14px] font-semibold text-ink truncate">{a.name}</p>
+                      <p className="text-[11px] text-muted mt-0.5">
+                        {formatSize(a.size)} · {new Date(a.created_at).toLocaleDateString('en-GB')}
+                      </p>
+                    </div>
+                    <div className="flex items-center gap-3 flex-shrink-0">
+                      <button onClick={() => handleCopyLink(a.url)}
+                        className="text-[12px] text-orange hover:underline">Copy link</button>
+                      <a href={a.url} target="_blank"
+                        className="text-[12px] text-muted hover:text-ink hover:underline">View →</a>
+                      <button onClick={() => handleDeleteAsset(a.name)}
+                        className="text-[12px] text-muted hover:text-red-500 hover:underline">Delete</button>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
           </div>
         )}
 

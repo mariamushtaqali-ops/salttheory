@@ -55,3 +55,34 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: e.message || 'Failed' }, { status: 500 })
   }
 }
+
+export async function PATCH(req: NextRequest) {
+  try {
+    const supabase = createClient()
+    const { data: { user } } = await supabase.auth.getUser()
+    if (!user) return NextResponse.json({ error: 'Unauthorised' }, { status: 401 })
+
+    const { data: profile } = await supabase
+      .from('profiles').select('is_admin').eq('id', user.id).single()
+    if (!profile?.is_admin) return NextResponse.json({ error: 'Forbidden' }, { status: 403 })
+
+    const { id, title, slug, excerpt, body } = await req.json()
+    if (!id || !title || !slug || !body) {
+      return NextResponse.json({ error: 'id, title, slug and body required' }, { status: 400 })
+    }
+
+    // Update only — never re-sends the newsletter
+    const { data: post, error } = await supabase
+      .from('blog_posts')
+      .update({ title, slug, excerpt, body })
+      .eq('id', id)
+      .select().single()
+
+    if (error) throw error
+
+    return NextResponse.json({ success: true, post })
+  } catch (e: any) {
+    console.error('Blog post update error:', e)
+    return NextResponse.json({ error: e.message || 'Failed' }, { status: 500 })
+  }
+}
