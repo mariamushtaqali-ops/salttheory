@@ -235,14 +235,14 @@ export default function AdminPage() {
                   <div key={post.id} className="card p-4 flex items-center justify-between gap-4">
                     <div className="flex-1 min-w-0">
                       <p className="text-[14px] font-semibold text-ink truncate">{post.title}</p>
-                      <p className="text-[11px] text-muted mt-0.5">/blog/{post.slug} · {new Date(post.created_at).toLocaleDateString('en-GB')}</p>
+                      <p className="text-[11px] text-muted mt-0.5">/journal/{post.slug} · {new Date(post.created_at).toLocaleDateString('en-GB')}</p>
                     </div>
                     <div className="flex items-center gap-3 flex-shrink-0">
                       <span className={`text-[10px] font-bold uppercase px-2 py-0.5 rounded-full
                         ${post.published ? 'bg-green/10 text-green' : 'bg-border text-muted'}`}>
                         {post.published ? 'Live' : 'Draft'}
                       </span>
-                      <a href={`/blog/${post.slug}`} target="_blank"
+                      <a href={`/journal/${post.slug}`} target="_blank"
                         className="text-[12px] text-orange hover:underline">View →</a>
                       <button onClick={() => handleEditClick(post.id)}
                         className="text-[12px] text-muted hover:text-ink hover:underline">Edit</button>
@@ -279,7 +279,7 @@ export default function AdminPage() {
                   <input className="input font-mono text-[13px]" type="text"
                     placeholder="how-to-price-your-home-food-business"
                     value={slug} onChange={e => setSlug(e.target.value)} />
-                  <p className="text-[11px] text-muted mt-1">salttheorylab.com/blog/{slug || 'your-post-slug'}</p>
+                  <p className="text-[11px] text-muted mt-1">salttheorylab.com/journal/{slug || 'your-post-slug'}</p>
                 </div>
                 <div>
                   <label className="block text-[11px] font-bold uppercase tracking-wide text-muted mb-2">
@@ -317,8 +317,8 @@ export default function AdminPage() {
 
               <p className="text-[11px] text-muted text-center">
                 {editingId
-                  ? `This will update /blog/${slug || '...'} — no newsletter will be sent.`
-                  : `This will publish to /blog/${slug || '...'} and send to all Beehiiv subscribers immediately.`}
+                  ? `This will update /journal/${slug || '...'} — no newsletter will be sent.`
+                  : `This will publish to /journal/${slug || '...'} and send to all Beehiiv subscribers immediately.`}
               </p>
             </div>
           </div>

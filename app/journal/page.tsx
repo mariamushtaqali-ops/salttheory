@@ -3,8 +3,17 @@ import Link from 'next/link'
 import NewsletterSignup from '@/components/ui/NewsletterSignup'
 
 export const metadata = {
-  title: 'Journal — Salt Theory',
-  description: 'Recipes, pricing tips, and food business insights for Asian food businesses.',
+  title: 'Blog',
+  description: 'Recipes, pricing tips, and food business insights for Pakistani food entrepreneurs — one post a week.',
+  alternates: {
+    canonical: '/journal',
+  },
+  openGraph: {
+    title: 'Salt Theory Blog',
+    description: 'Recipes, pricing tips, and food business insights for Pakistani food entrepreneurs — one post a week.',
+    url: 'https://salttheorylab.com/journal',
+    type: 'website',
+  },
 }
 
 export default async function BlogPage() {
@@ -19,7 +28,7 @@ export default async function BlogPage() {
     <>
       <main className="max-w-[860px] mx-auto px-6 py-12">
         <div className="mb-10">
-          <div className="eyebrow mb-3">The Salt Theory Journal</div>
+          <div className="eyebrow mb-3">Salt Theory Blog</div>
           <h1 className="font-serif text-[40px] md:text-[52px] text-ink mb-4 leading-tight">
             Recipes, pricing & food business insights
           </h1>
@@ -33,7 +42,7 @@ export default async function BlogPage() {
             {posts.map(post => (
               <Link
                 key={post.id}
-                href={`/blog/${post.slug}`}
+                href={`/journal/${post.slug}`}
                 className="block card p-6 hover:-translate-y-1 hover:shadow-md transition-all"
               >
                 <p className="text-[11px] font-bold uppercase tracking-[0.1em] text-muted mb-2">

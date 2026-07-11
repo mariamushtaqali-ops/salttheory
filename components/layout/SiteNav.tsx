@@ -13,7 +13,7 @@ export default function SiteNav() {
         {[
           { href: '/#tools',   label: 'Tools' },
           { href: '/#pricing', label: 'Pricing' },
-          { href: '/blog',     label: 'Blog' },
+          { href: '/journal',  label: 'Journal' },
         ].map(l => (
           <Link
             key={l.href}
