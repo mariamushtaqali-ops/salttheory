@@ -765,19 +765,15 @@ export default function PlateProfitForm({ canCost, usageCount, isAnon = false }:
               <div className="grid grid-cols-2 gap-2 mb-2">
                 <div>
                   <Lbl>Qty</Lbl>
-                  <div className="flex gap-1.5">
-                    <input className="input text-[13px] py-2 px-2 flex-1 min-w-0" type="number" placeholder="500"
-                      value={ing.qty} onChange={e => updIng(ing.id, { qty: e.target.value })} />
-                    <select className="input text-[12px] py-2 px-1 cursor-pointer w-[60px] flex-shrink-0"
-                      value={ing.useUnit} onChange={e => updIng(ing.id, { useUnit: e.target.value })}>
-                      {USE_UNITS_WEIGHT.map(u => <option key={u}>{u}</option>)}
-                    </select>
-                  </div>
+                  <input className="input text-[13px] py-2 px-2 w-full" type="number" placeholder="500"
+                    value={ing.qty} onChange={e => updIng(ing.id, { qty: e.target.value })} />
                 </div>
                 <div>
-                  <Lbl>Waste%</Lbl>
-                  <input className="input text-[13px] py-2 px-2 w-full" type="number" placeholder="0"
-                    value={ing.wastage} onChange={e => updIng(ing.id, { wastage: e.target.value })} />
+                  <Lbl>Unit</Lbl>
+                  <select className="input text-[13px] py-2 px-2 cursor-pointer w-full"
+                    value={ing.useUnit} onChange={e => updIng(ing.id, { useUnit: e.target.value })}>
+                    {USE_UNITS_WEIGHT.map(u => <option key={u}>{u}</option>)}
+                  </select>
                 </div>
               </div>
               <div className="grid grid-cols-2 gap-2 mb-2">
@@ -787,12 +783,17 @@ export default function PlateProfitForm({ canCost, usageCount, isAnon = false }:
                     value={ing.price} onChange={e => updIng(ing.id, { price: e.target.value })} />
                 </div>
                 <div>
-                  <Lbl>Priced per</Lbl>
-                  <select className="input text-[12px] py-2 px-1.5 cursor-pointer w-full"
-                    value={ing.buyUnit} onChange={e => updIng(ing.id, { buyUnit: e.target.value })}>
-                    {BUY_UNITS_WEIGHT.map(u => <option key={u}>{u}</option>)}
-                  </select>
+                  <Lbl>Waste%</Lbl>
+                  <input className="input text-[13px] py-2 px-2 w-full" type="number" placeholder="0"
+                    value={ing.wastage} onChange={e => updIng(ing.id, { wastage: e.target.value })} />
                 </div>
+              </div>
+              <div className="mb-2">
+                <Lbl>Priced per</Lbl>
+                <select className="input text-[13px] py-2 px-2.5 cursor-pointer w-full"
+                  value={ing.buyUnit} onChange={e => updIng(ing.id, { buyUnit: e.target.value })}>
+                  {BUY_UNITS_WEIGHT.map(u => <option key={u}>{u}</option>)}
+                </select>
               </div>
               <div className="flex justify-between items-center pt-1.5 border-t border-border">
                 <span className="text-[11px] font-bold text-muted uppercase tracking-wide">Cost</span>
@@ -862,27 +863,30 @@ export default function PlateProfitForm({ canCost, usageCount, isAnon = false }:
               <div className="grid grid-cols-2 gap-2 mb-2">
                 <div>
                   <Lbl>Qty</Lbl>
-                  <div className="flex gap-1.5">
-                    <input className="input text-[13px] py-2 px-2 flex-1 min-w-0" type="number" placeholder="2"
-                      value={ing.qty} onChange={e => updIng(ing.id, { qty: e.target.value })} />
-                    <select className="input text-[12px] py-2 px-1 cursor-pointer w-[64px] flex-shrink-0"
-                      value={ing.useUnit} onChange={e => updIng(ing.id, { useUnit: e.target.value })}>
-                      {USE_UNITS_SPOON.map(u => <option key={u}>{u}</option>)}
-                    </select>
-                  </div>
+                  <input className="input text-[13px] py-2 px-2 w-full" type="number" placeholder="2"
+                    value={ing.qty} onChange={e => updIng(ing.id, { qty: e.target.value })} />
                 </div>
+                <div>
+                  <Lbl>Unit</Lbl>
+                  <select className="input text-[13px] py-2 px-2 cursor-pointer w-full"
+                    value={ing.useUnit} onChange={e => updIng(ing.id, { useUnit: e.target.value })}>
+                    {USE_UNITS_SPOON.map(u => <option key={u}>{u}</option>)}
+                  </select>
+                </div>
+              </div>
+              <div className="grid grid-cols-2 gap-2 mb-2">
                 <div>
                   <Lbl>Price paid</Lbl>
                   <input className="input text-[13px] py-2 px-2 w-full" type="number" placeholder="85"
                     value={ing.price} onChange={e => updIng(ing.id, { price: e.target.value })} />
                 </div>
-              </div>
-              <div className="mb-2">
-                <Lbl>Pack size</Lbl>
-                <select className="input text-[12px] py-2 px-1.5 cursor-pointer w-full"
-                  value={ing.buyUnit} onChange={e => updIng(ing.id, { buyUnit: e.target.value })}>
-                  {BUY_UNITS_SPOON.map(u => <option key={u}>{u}</option>)}
-                </select>
+                <div>
+                  <Lbl>Pack size</Lbl>
+                  <select className="input text-[13px] py-2 px-2 cursor-pointer w-full"
+                    value={ing.buyUnit} onChange={e => updIng(ing.id, { buyUnit: e.target.value })}>
+                    {BUY_UNITS_SPOON.map(u => <option key={u}>{u}</option>)}
+                  </select>
+                </div>
               </div>
               <div className="flex justify-between items-center pt-1.5 border-t border-border">
                 <span className="text-[11px] font-bold text-muted uppercase tracking-wide">Cost</span>
