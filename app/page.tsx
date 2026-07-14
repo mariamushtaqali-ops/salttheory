@@ -365,13 +365,13 @@ export default async function HomePage() {
           <div className="card p-6 border-orange relative">
             <div className="absolute -top-3 left-1/2 -translate-x-1/2 bg-orange text-white
                             text-[10px] font-bold px-3 py-1 rounded-full whitespace-nowrap">
-              ✦ Both modules unlimited
+              ✦ Everything you need to run your kitchen
             </div>
             <p className="text-[11px] font-bold uppercase tracking-wide text-muted mb-3">Pro</p>
             <p className="font-serif text-[42px] text-ink leading-none mb-1">PKR 999</p>
             <p className="text-[12px] text-muted mb-5">Built for serious food businesses</p>
             <ul className="space-y-2 text-[13px] text-muted mb-6">
-              <li className="flex gap-2"><span className="text-green">✦</span>Unlimited Recipe Studio</li>
+              <li className="flex gap-2"><span className="text-green">✦</span>Recipe Studio, unlocked</li>
               <li className="flex gap-2"><span className="text-green">✦</span>Unlimited Plate Profit</li>
               <li className="flex gap-2"><span className="text-green">✦</span>PDF Export</li>
               <li className="flex gap-2"><span className="text-green">✦</span>Future Platform Modules</li>

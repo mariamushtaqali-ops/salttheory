@@ -57,7 +57,7 @@ export default async function RecipeGenniePage() {
             You have <span className="font-bold text-ink">{Math.max(limit - recipeCount, 0)}</span> free recipes remaining.
           </span>
           {!canGenerate && (
-            <a href="/account" className="text-orange font-bold hover:underline">Unlock Unlimited →</a>
+            <a href="/account" className="text-orange font-bold hover:underline">Upgrade to Pro →</a>
           )}
         </div>
       )}

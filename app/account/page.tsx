@@ -49,7 +49,7 @@ export default async function AccountPage() {
           <div>
             <p className="text-[14px] font-bold text-white mb-1">Upgrade to Pro</p>
             <p className="text-[13px] text-white/40 leading-relaxed">
-              Unlimited recipes + costings + PDF export<br />
+              Recipe Studio unlocked + unlimited costings + PDF export<br />
               PKR 999/month · Pay via EasyPaisa or JazzCash
             </p>
           </div>

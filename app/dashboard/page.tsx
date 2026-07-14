@@ -190,14 +190,14 @@ export default async function DashboardPage() {
       {!isFirstTimeUser && (
         <div className="grid grid-cols-2 gap-3 mb-4">
           {[
-            { label: 'Recipes', count: recipeCount, limit: limits.recipes, color: 'bg-orange' },
-            { label: 'Costings', count: costingCount, limit: limits.costings, color: 'bg-green' },
+            { label: 'Recipes', count: recipeCount, limit: limits.recipes, color: 'bg-orange', proLabel: 'Pro' },
+            { label: 'Costings', count: costingCount, limit: limits.costings, color: 'bg-green', proLabel: 'Unlimited' },
           ].map(stat => (
             <div key={stat.label} className="card p-4">
               <div className="flex justify-between items-center mb-2.5">
                 <span className="text-[11px] font-bold uppercase tracking-[0.07em] text-muted">{stat.label}</span>
                 <span className="text-[10px] text-orange font-bold">
-                  {tier === 'free' ? `${stat.limit} free` : 'Unlimited'}
+                  {tier === 'free' ? `${stat.limit} free` : stat.proLabel}
                 </span>
               </div>
               <div className="flex items-baseline gap-1 mb-2">
@@ -225,7 +225,7 @@ export default async function DashboardPage() {
               {limits.recipes - recipeCount} recipes left this month
             </p>
             <p className="text-[12px] text-white/40 leading-relaxed">
-              Unlimited recipes + costings + PDF export — PKR 999/mo
+              Recipe Studio unlocked + unlimited costings + PDF export — PKR 999/mo
             </p>
           </div>
           <Link
@@ -233,7 +233,7 @@ export default async function DashboardPage() {
             className="bg-orange text-white text-[12px] font-bold px-4 py-2
                        rounded-full flex-shrink-0 hover:bg-[#C85A2C] transition-colors"
           >
-            Unlock Unlimited ✦
+            Unlock Pro ✦
           </Link>
         </div>
       )}

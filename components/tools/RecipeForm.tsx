@@ -198,7 +198,7 @@ export default function RecipeForm({ canGenerate, usageCount, hasCosting, isAnon
       {!canGenerate && !isAnon && (
         <p className="text-center text-[12px] text-muted mt-3">
           You have used {usageCount} free recipes.{' '}
-          <a href="/account" className="text-orange font-bold">Upgrade for unlimited →</a>
+          <a href="/account" className="text-orange font-bold">Upgrade to Pro →</a>
         </p>
       )}
 
