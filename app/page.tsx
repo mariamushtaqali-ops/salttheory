@@ -376,8 +376,8 @@ export default async function HomePage() {
               <li className="flex gap-2"><span className="text-green">✦</span>PDF Export</li>
               <li className="flex gap-2"><span className="text-green">✦</span>Future Platform Modules</li>
               <li className="flex gap-2"><span className="text-green">✦</span>Priority Updates</li>
-              <li className="flex gap-2"><span className="text-green">✦</span>EasyPaisa</li>
-              <li className="flex gap-2"><span className="text-green">✦</span>JazzCash</li>
+              <li className="flex gap-2"><span className="text-green">✦</span>Secure card payment</li>
+              <li className="flex gap-2"><span className="text-green">✦</span>Cancel anytime</li>
             </ul>
             <Link href="/auth/signup" className="btn-primary block text-center py-2.5 text-[13px]">
               Upgrade to Pro
