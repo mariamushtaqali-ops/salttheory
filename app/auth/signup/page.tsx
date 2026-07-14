@@ -26,10 +26,14 @@ export default function SignupPage() {
   }
 
   async function handleGoogle() {
-    await supabase.auth.signInWithOAuth({
+    const { error } = await supabase.auth.signInWithOAuth({
       provider: 'google',
       options: { redirectTo: `${location.origin}/auth/callback?next=/dashboard` },
     })
+    if (error) {
+      console.error('Google sign-in error:', error)
+      toast.error(error.message ?? 'Google sign-in failed')
+    }
   }
 
   async function handleSignup(e: React.FormEvent) {
