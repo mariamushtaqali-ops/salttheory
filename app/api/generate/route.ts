@@ -2,11 +2,20 @@ import { NextRequest, NextResponse } from 'next/server'
 import { createClient } from '@/lib/supabase/server'
 import { LIMITS } from '@/types'
 import { getAnonId, getAnonUsage, markAnonUsed } from '@/lib/anon'
+import { isRateLimited, getClientIp } from '@/lib/rateLimit'
 
 export async function POST(req: NextRequest) {
   try {
     const supabase = createClient()
     const { data: { user } } = await supabase.auth.getUser()
+
+    // IP-based cap, on top of the per-account/per-anon-id limits below.
+    // Protects against cookie-clearing or multi-account abuse driving up API costs.
+    const ip = getClientIp(req)
+    const ipLimit = user ? 30 : 5
+    if (await isRateLimited(`generate:${ip}`, ipLimit, 60)) {
+      return NextResponse.json({ error: 'Too many requests from this connection — please try again in an hour' }, { status: 429 })
+    }
 
     let anonId: string | null = null
     if (!user) {

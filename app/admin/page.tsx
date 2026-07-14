@@ -161,7 +161,7 @@ export default function AdminPage() {
   async function handleUpgrade(userId: string) {
     const res = await fetch('/api/admin/upgrade', {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json', 'x-admin-secret': 'SaltTheoryAdmin2026' },
+      headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ userId, tier: 'pro' }),
     })
     if (res.ok) {

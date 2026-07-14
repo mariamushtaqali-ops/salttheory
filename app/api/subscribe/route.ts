@@ -1,8 +1,14 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createClient } from '@/lib/supabase/server'
+import { isRateLimited, getClientIp } from '@/lib/rateLimit'
 
 export async function POST(req: NextRequest) {
   try {
+    const ip = getClientIp(req)
+    if (await isRateLimited(`subscribe:${ip}`, 5, 60)) {
+      return NextResponse.json({ error: 'Too many attempts — please try again in a bit' }, { status: 429 })
+    }
+
     const { email, source = 'homepage' } = await req.json()
     if (!email) return NextResponse.json({ error: 'Email required' }, { status: 400 })
 
