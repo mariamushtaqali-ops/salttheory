@@ -12,6 +12,7 @@ export interface Profile {
   billing_date: string | null
   is_admin: boolean
   created_at: string
+  safepay_subscription_id: string | null
 }
 
 export interface Recipe {
@@ -80,5 +81,5 @@ export interface Subscriber {
 // Usage limits per tier
 export const LIMITS: Record<Tier, { recipes: number; costings: number }> = {
   free: { recipes: 5, costings: 3 },
-  pro:  { recipes: Infinity, costings: Infinity },
+  pro:  { recipes: 30, costings: Infinity },
 }

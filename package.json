@@ -15,6 +15,7 @@
     "@supabase/supabase-js": "^2",
     "@supabase/ssr": "^0.5",
     "@anthropic-ai/sdk": "^0.26.0",
+    "@sfpy/node-sdk": "^3.0.2",
     "recharts": "^2.12",
     "jspdf": "^2.5",
     "jspdf-autotable": "^3.8",
