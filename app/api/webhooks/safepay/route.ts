@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { safepay } from '@/lib/safepay'
+import { getSafepay } from '@/lib/safepay'
 import { createAdminClient } from '@/lib/supabase/admin'
 
 // NOTE: this webhook has been built from Safepay's official Node SDK source
@@ -22,7 +22,7 @@ export async function POST(req: NextRequest) {
   const headers: Record<string, string> = {}
   req.headers.forEach((value, key) => { headers[key] = value })
 
-  const isValid = safepay.verify.webhook({ body: parsed, headers })
+  const isValid = getSafepay().verify.webhook({ body: parsed, headers })
   if (!isValid) {
     console.error('Safepay webhook: signature verification failed')
     return NextResponse.json({ error: 'Invalid signature' }, { status: 401 })

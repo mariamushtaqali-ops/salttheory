@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createClient } from '@/lib/supabase/server'
-import { safepay, SAFEPAY_PRO_PLAN_ID } from '@/lib/safepay'
+import { getSafepay, SAFEPAY_PRO_PLAN_ID } from '@/lib/safepay'
 
 export async function POST(req: NextRequest) {
   try {
@@ -15,7 +15,7 @@ export async function POST(req: NextRequest) {
 
     // `reference` is how the webhook will know which Salt Theory user this
     // subscription belongs to — Safepay echoes it back on every webhook event.
-    const url = await safepay.checkout.createSubscription({
+    const url = await getSafepay().checkout.createSubscription({
       planId: SAFEPAY_PRO_PLAN_ID,
       reference: user.id,
       redirectUrl: `${siteUrl}/account?upgraded=1`,
