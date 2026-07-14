@@ -2,6 +2,7 @@ import { createClient } from '@/lib/supabase/server'
 import { redirect } from 'next/navigation'
 import AppShell from '@/components/layout/AppShell'
 import ProfileCompletionForm from '@/components/tools/ProfileCompletionForm'
+import UpgradeButton from '@/components/billing/UpgradeButton'
 import { LIMITS } from '@/types'
 
 export default async function AccountPage() {
@@ -49,24 +50,11 @@ export default async function AccountPage() {
           <div>
             <p className="text-[14px] font-bold text-white mb-1">Upgrade to Pro</p>
             <p className="text-[13px] text-white/40 leading-relaxed">
-              Unlimited recipes + costings + PDF export<br />
-              PKR 999/month · Pay via EasyPaisa or JazzCash
+              Recipe Studio unlocked + unlimited costings + PDF export<br />
+              PKR 999/month · Secure card payment
             </p>
           </div>
-          <div className="flex-shrink-0">
-            <a
-              href={`https://wa.me/923342992706?text=Hi! I'd like to upgrade my Salt Theory account to Pro (PKR 999/mo). My email: ${user.email}`}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="inline-flex items-center gap-2 bg-orange text-white font-bold
-                         text-[13px] px-5 py-2.5 rounded-full hover:bg-[#C85A2C] transition-colors"
-            >
-              Upgrade — PKR 999/mo ✦
-            </a>
-            <p className="text-[11px] text-white/30 mt-2 text-center">
-              Send payment via EasyPaisa/JazzCash,<br />we'll upgrade you within 24 hours
-            </p>
-          </div>
+          <UpgradeButton />
         </div>
       )}
 
